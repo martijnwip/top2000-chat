@@ -1,0 +1,47 @@
+# HELD-OUT TESTSET -- willekeurig getrokken,met de hand te verifieren.,,,,,,
+#,,,,,,,
+# DEFINITIE: het jaar van de VROEGSTE OFFICIELE UITGAVE van dit nummer,album,,,,,,
+# of single,wat het eerst kwam. (Go Your Own Way = 1976,de single,niet 1977,,,,
+# van Rumours.) Houd je aan deze definitie,ook als een bron iets anders zegt.,,,,,,
+#,,,,,,,
+# INVULLEN:,,,,,,,
+#   release_jaar  het jaartal,of LEEG als je het niet zeker weet,,,,,,
+#   bron          waar je het vandaan hebt (wikipedia / discogs / hoes / ...),,,,,,,
+#,,,,,,,
+# Gebruik NIET je eigen database of MusicBrainz om te verifieren -- dan meet je,,,,,,,
+# je pijplijn tegen zichzelf. Wat jouw pijplijn ervan maakte staat hier bewust,,,,,,,
+# niet in; dat zou je oordeel kleuren.,,,,,,,
+#,,,,,,,
+# Deze set gebruik je NOOIT om de selectielogica aan te passen. Daar is de gold,,,,,,,
+# set voor. Deze is er alleen om te rapporteren.,,,,,,,
+song_id,artiest,titel,beste_positie,noteringen,release_jaar,bron,notitie
+700,Alice Cooper,Halo of Flies,19,27,1973,Wikipedia,Het vrij lange nummer is afkomstig van de elpee Killer uit 1971. In juni 1973 wordt het nummer in Europa op single uitgebracht
+946,Steve Harley & Cockney Rebel,Sebastian,49,27,1973,Wikipedia,It was released as the band's debut single in 1973 from their album The Human Menagerie
+59,Goo Goo Dolls,Iris,59,18,1998,Wikipedia,Op 1 april 1998 werd het nummer op single uitgebracht.
+133,Coldplay & Avicii,A Sky Full of Stars,68,12,2014,NPO Radio 2,De single 'A Sky Full of Stars' komt uit op het zesde studioalbum van Coldplay: Ghost Stories (2014). Voor deze single vraagt de band de hulp van de Zweedse dj en producer Avicii
+1761,Ramses Shaffy,Sammy,90,27,1966,Omroep Max,"Sammy komt uit in 1966 en staat op Shaffy’s album Ramses II, zijn 2e plaat"
+842,Status Quo,Whatever You Want,286,27,1979,NPO Radio 2,Waarschijnlijk de bekendste single van Status Quo van het gelijknamige album uit 1979
+2099,Amy Macdonald,Mr. Rock & Roll,289,11,2007,Wikipedia,"It was her first full single after the limited online release of ""Poison Prince""[2] and was released physically in the United Kingdom on 16 July 2007"
+879,John Mayer,Daughters,304,21,2003,NPO Radio 2,Het vervolg op zijn debuutalbum Room For Squares (2001) luistert naar de titel Heavier Things (2003)
+4526,The Kinks,Dead End Street,340,8,1966,Wikipedia,"Dead End Street"" is een nummer van de Britse rockgroep The Kinks uit 1966"
+1014,The Rolling Stones,She's a Rainbow,490,27,1967,Wikipedia,"She's a Rainbow"" is een nummer van de Britse band The Rolling Stones. Het nummer verscheen op hun album Their Satanic Majesties Request uit 1967"
+2004,10cc,I'm Mandy Fly Me,554,14,1974,Wikipedia,"The album version of ""I'm Mandy Fly Me"" features an intro in the form of one of the bridge sections of the band's 1974 song ""Clockwork Creep"""
+2392,Buffalo Springfield,For what it's worth,716,19,1966,Wikipedia,Released as a single on Atco Records in December 1966
+4729,The Yardbirds,For Your Love,830,12,1965,Wikipedia,Released in June 1965
+4155,Sandy Coast,True Love That's a Wonder,1052,16,1971,Wikipedia,Het nummer werd uitgebracht op hun album Sandy coast uit 1971
+3652,Michael Bublé,It's a Beautiful Day,1139,4,2013,Wikipedia,"The single was released on iTunes on February 25, 2013"
+1868,Frank Boeijen Groep,Winter in Hamburg,1158,15,1987,Wikipedia,Het nummer werd uitgebracht op hun zesde studioalbum Welkom in Utopia uit 1987
+4598,The Pretenders,2000 Miles,1306,6,1983,Wikipedia,it was released on 18 November 1983
+3484,Living Colour,Love Rears Its Ugly Head,1383,9,1990,Wikipedia,single released by Living Colour in 1990
+4055,Robbie Williams,Morning Sun,1462,1,2010,Wikipedia,It was released on 8 March 2010
+3722,Mr. Big,To Be with You,1575,3,1991,Wikipedia,released in November 1991
+4843,Van McCoy,The Hustle,1584,3,1975,Wikipedia,
+2887,Fine Young Cannibals,She Drives Me Crazy,1630,4,1988,Wikipedia,
+2613,David Gray,Babylon,1687,2,1999,Wikipedia,released in 1988
+4060,Robbie Williams & Gary Barlow,Shame,1718,1,2010,Wikipedia,released as the lead single from the album on 27 August 2010
+2656,Diana Ross,I'm Coming Out,1753,1,1980,Wikipedia,"released on August 22, 1980"
+2960,Gene Pitney,Mecca,1786,1,1963,Wikipedia,
+4231,Snap!,Rhythm Is a Dancer,1829,4,1992,Wikipedia,released in March 1992
+4246,Sonny & Cher,The Beat Goes On,1829,1,1967,Wikipedia,
+3293,Johnny Mathis & Deniece Williams,"Too much, too little, too late",1843,1,1978,Wikipedia,Released as a single in 1978
+3122,InCrowd,I'll be free,1939,1,1966,Wikipedia,

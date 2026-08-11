@@ -1,0 +1,131 @@
+<svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" role="img" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <title>Top2000.ai — scheiding tussen ontwikkeltijd en draaitijd</title>
+  <desc>Boven de grens staat de ontwikkelpijplijn waar Claude en externe bronnen mogen meedoen: bronnen, ophaalscripts, de database, corpusbouw en het indexeren. Onder de grens staat het draaipad dat uitsluitend lokaal met Ollama werkt: vraag, router, een SQL-pad en een RAG-pad, en het antwoord met bronvermelding.</desc>
+
+  <defs>
+    <marker id="p" markerWidth="9" markerHeight="9" refX="7.5" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4 z" fill="var(--text-300, #8a8780)"/>
+    </marker>
+    <marker id="pa" markerWidth="9" markerHeight="9" refX="7.5" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4 z" fill="var(--accent-main-100, #c15f3c)"/>
+    </marker>
+  </defs>
+
+  <style>
+    .zone  { fill: none; stroke: var(--border-200, #d9d5cd); stroke-width: 1.2; }
+    .zlab  { font-size: 11px; font-weight: 600; letter-spacing: .09em;
+             fill: var(--text-300, #8a8780); }
+    .box   { fill: var(--bg-100, #ffffff); stroke: var(--border-300, #c4bfb5); stroke-width: 1.2; }
+    .store { fill: var(--bg-200, #f5f3ee); stroke: var(--border-300, #c4bfb5); stroke-width: 1.2; }
+    .acc   { fill: var(--bg-100, #ffffff); stroke: var(--accent-main-100, #c15f3c); stroke-width: 1.5; }
+    .t     { font-size: 12.5px; font-weight: 550; fill: var(--text-100, #1a1915); }
+    .s     { font-size: 10.5px; fill: var(--text-300, #8a8780); }
+    .ln    { stroke: var(--text-300, #8a8780); stroke-width: 1.3; fill: none; marker-end: url(#p); }
+    .lnd   { stroke: var(--text-300, #8a8780); stroke-width: 1.3; fill: none;
+             stroke-dasharray: 3 3; marker-end: url(#p); }
+    .lna   { stroke: var(--accent-main-100, #c15f3c); stroke-width: 1.4; fill: none; marker-end: url(#pa); }
+    .acct  { font-size: 9.5px; font-weight: 650; letter-spacing: .06em;
+             fill: var(--accent-main-100, #c15f3c); }
+  </style>
+
+  <!-- ================= ZONE 1 : ONTWIKKELTIJD ================= -->
+  <rect class="zone" x="16" y="30" width="868" height="374" rx="10" stroke-dasharray="5 4"/>
+  <text class="zlab" x="34" y="52">ONTWIKKELTIJD — HIER MAG CLAUDE MEEWERKEN</text>
+
+  <!-- bronnen -->
+  <rect class="store" x="36"  y="68" width="190" height="36" rx="6"/>
+  <text class="t" x="131" y="91" text-anchor="middle">Wikipedia jaarlijsten</text>
+
+  <rect class="store" x="256" y="68" width="170" height="36" rx="6"/>
+  <text class="t" x="341" y="91" text-anchor="middle">MusicBrainz</text>
+
+  <rect class="acc"   x="456" y="68" width="210" height="36" rx="6"/>
+  <text class="t" x="561" y="91" text-anchor="middle">Wikidata + Wikipedia</text>
+  <text class="acct" x="676" y="90">NIEUW</text>
+
+  <!-- scripts -->
+  <path class="ln"  d="M131 104 L131 130"/>
+  <path class="ln"  d="M341 104 L341 130"/>
+  <path class="lna" d="M561 104 L561 130"/>
+
+  <rect class="box" x="36"  y="132" width="190" height="36" rx="6"/>
+  <text class="t" x="131" y="155" text-anchor="middle">parse_wikipedia.py</text>
+
+  <rect class="box" x="256" y="132" width="170" height="36" rx="6"/>
+  <text class="t" x="341" y="155" text-anchor="middle">fetch_mb · select_mb</text>
+
+  <rect class="acc" x="456" y="132" width="210" height="36" rx="6"/>
+  <text class="t" x="561" y="155" text-anchor="middle">verrijk_wikidata.py</text>
+
+  <!-- convergentie naar de database -->
+  <path class="ln"  d="M131 168 L131 186 L336 186 L336 202"/>
+  <path class="ln"  d="M341 168 L341 202"/>
+  <path class="lna" d="M561 168 L561 186 L346 186 L346 202"/>
+
+  <rect class="store" x="246" y="204" width="190" height="46" rx="6"/>
+  <text class="t" x="341" y="223" text-anchor="middle">top2000.db</text>
+  <text class="s" x="341" y="239" text-anchor="middle">songs · notering · verrijking</text>
+
+  <!-- corpusbouw en index -->
+  <path class="ln" d="M246 227 L201 227 L201 288"/>
+
+  <rect class="box"   x="126" y="290" width="150" height="40" rx="6"/>
+  <text class="t" x="201" y="308" text-anchor="middle">corpus_songs.py</text>
+  <text class="s" x="201" y="322" text-anchor="middle">→ .jsonl</text>
+
+  <path class="ln" d="M276 310 L310 310"/>
+
+  <rect class="box"   x="316" y="290" width="150" height="40" rx="6"/>
+  <text class="t" x="391" y="308" text-anchor="middle">rag_index.py</text>
+  <text class="s" x="391" y="322" text-anchor="middle">chunken · embedden</text>
+
+  <path class="ln" d="M466 310 L500 310"/>
+
+  <rect class="store" x="506" y="290" width="160" height="40" rx="6"/>
+  <text class="t" x="586" y="308" text-anchor="middle">rag_index.db</text>
+  <text class="s" x="586" y="322" text-anchor="middle">chunk · vector · fts5</text>
+
+  <!-- embedmodel: lokaal, ook tijdens de bouw -->
+  <path class="lnd" d="M391 330 L391 352"/>
+  <rect class="box" x="316" y="354" width="150" height="34" rx="6"/>
+  <text class="t" x="391" y="375" text-anchor="middle">Ollama · bge-m3</text>
+
+  <!-- ================= GRENS ================= -->
+  <line x1="16" y1="424" x2="884" y2="424"
+        stroke="var(--accent-main-100, #c15f3c)" stroke-width="2"/>
+  <rect x="286" y="412" width="328" height="24" rx="12"
+        fill="var(--bg-000, #faf9f5)" stroke="var(--accent-main-100, #c15f3c)" stroke-width="1.2"/>
+  <text class="acct" x="450" y="428" text-anchor="middle">GEEN API-CALL ONDER DEZE LIJN</text>
+
+  <!-- ================= ZONE 2 : DRAAITIJD ================= -->
+  <rect class="zone" x="16" y="450" width="868" height="200" rx="10"/>
+  <text class="zlab" x="34" y="472">DRAAITIJD — UITSLUITEND LOKAAL</text>
+
+  <rect class="box" x="36" y="530" width="112" height="38" rx="6"/>
+  <text class="t" x="92" y="554" text-anchor="middle">vraag</text>
+
+  <path class="ln" d="M148 549 L184 549"/>
+
+  <rect class="box" x="190" y="530" width="120" height="38" rx="6"/>
+  <text class="t" x="250" y="554" text-anchor="middle">router</text>
+
+  <path class="ln" d="M310 549 L340 549 L340 512 L370 512"/>
+  <path class="ln" d="M310 549 L340 549 L340 588 L370 588"/>
+
+  <rect class="box" x="376" y="490" width="286" height="44" rx="6"/>
+  <text class="t" x="519" y="509" text-anchor="middle">SQL-pad</text>
+  <text class="s" x="519" y="524" text-anchor="middle">vertaalt naar SELECT · SQLite rekent</text>
+
+  <rect class="box" x="376" y="566" width="286" height="44" rx="6"/>
+  <text class="t" x="519" y="585" text-anchor="middle">RAG-pad</text>
+  <text class="s" x="519" y="600" text-anchor="middle">BM25 + cosine → qwen2.5:7b-instruct</text>
+
+  <path class="ln" d="M662 512 L692 512 L692 549 L722 549"/>
+  <path class="ln" d="M662 588 L692 588 L692 549 L722 549"/>
+
+  <rect class="store" x="728" y="530" width="136" height="38" rx="6"/>
+  <text class="t" x="796" y="554" text-anchor="middle">antwoord + bron</text>
+
+  <!-- legenda -->
+  <text class="s" x="34" y="676">Streepjeslijn = ontwikkeltijd · doorgetrokken = draaitijd · gekleurd = nog te bouwen</text>
+</svg>

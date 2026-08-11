@@ -1,0 +1,58 @@
+<h2 class="sr-only">De mediaan-releasejaar van de Top 2000 steeg van 1974 (1999) naar 1989 (2025), maar het gat met het heden groeide van 25 naar 36 jaar: de lijst kruipt vooruit maar loopt steeds verder achter.</h2>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0.5rem 0 1.5rem;">
+  <div style="background: var(--surface-1); border-radius: var(--radius); padding: 1rem;">
+    <div style="font-size: 13px; color: var(--text-secondary);">Mediaan-releasejaar</div>
+    <div style="font-family: var(--font-voice); font-size: 30px; color: var(--text-primary);">1974 → 1989</div>
+    <div style="font-size: 12px; color: var(--text-muted);">stijgt 0,64 jaar per jaar</div>
+  </div>
+  <div style="background: var(--surface-1); border-radius: var(--radius); padding: 1rem;">
+    <div style="font-size: 13px; color: var(--text-secondary);">Gat met het heden</div>
+    <div style="font-family: var(--font-voice); font-size: 30px; color: var(--text-primary);">25 → 36 jaar</div>
+    <div style="font-size: 12px; color: var(--text-muted);">groeit 0,36 jaar per jaar</div>
+  </div>
+  <div style="background: var(--surface-1); border-radius: var(--radius); padding: 1rem;">
+    <div style="font-size: 13px; color: var(--text-secondary);">Verdict</div>
+    <div style="font-family: var(--font-voice); font-size: 30px; color: var(--text-primary);">Tussenin</div>
+    <div style="font-size: 12px; color: var(--text-muted);">niet bevroren, niet bijhoudend</div>
+  </div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 10px; font-size: 12px; color: var(--text-secondary);">
+  <span style="display: flex; align-items: center; gap: 5px;"><span style="width: 14px; height: 3px; background: #2a78d6; border-radius: 2px;"></span>Mediaan-releasejaar van de lijst</span>
+  <span style="display: flex; align-items: center; gap: 5px;"><span style="width: 14px; height: 0; border-top: 2px dashed #898781;"></span>Als de lijst de tijd zou bijhouden (gat = 25)</span>
+</div>
+
+<div style="position: relative; width: 100%; height: 340px;">
+  <canvas id="vg" role="img" aria-label="Lijngrafiek: mediaan-releasejaar per Top 2000-editie tegenover een referentielijn die de tijd bijhoudt. De mediaan stijgt van 1974 naar 1989 maar blijft onder de referentielijn, en het verschil groeit.">Mediaan-releasejaar stijgt van 1974 in 1999 naar 1989 in 2025; de referentielijn die de tijd bijhoudt loopt van 1974 naar 2000.</canvas>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+(function(){
+  var jaren=[1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+  var mediaan=[1974,1975,1976,1975,1975,1976,1976,1976,1977,1976,1979,1978,1980,1981,1981,1983,1985,1985,1986,1986,1987,1987,1987,1987,1988,1988,1989];
+  var referentie=jaren.map(function(t){return 1974+(t-1999);});
+  var muted=getComputedStyle(document.documentElement).getPropertyValue('--text-muted')||'#898781';
+  var grid=matchMedia('(prefers-color-scheme: dark)').matches?'#2c2c2a':'#e1e0d9';
+  new Chart(document.getElementById('vg'),{
+    type:'line',
+    data:{labels:jaren,datasets:[
+      {label:'Mediaan',data:mediaan,borderColor:'#2a78d6',backgroundColor:'rgba(42,120,214,0.10)',borderWidth:2,fill:true,tension:0.25,pointRadius:0,pointHoverRadius:5},
+      {label:'Bijhouden',data:referentie,borderColor:'#898781',borderWidth:2,borderDash:[6,5],fill:false,tension:0,pointRadius:0,pointHoverRadius:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        title:function(i){return 'Editie '+i[0].label;},
+        label:function(c){return (c.datasetIndex===0?'Mediaan-releasejaar: ':'Bijhouden zou zijn: ')+Math.round(c.parsed.y);},
+        afterbody:function(i){var t=parseInt(i[0].label,10);var m=mediaan[i[0].dataIndex];return 'Gat met heden: '+(t-m)+' jaar';}
+      }}},
+      scales:{
+        y:{min:1970,max:2002,ticks:{color:muted,callback:function(v){return v;}},grid:{color:grid}},
+        x:{ticks:{color:muted,maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false}}
+      }
+    }
+  });
+})();
+</script>

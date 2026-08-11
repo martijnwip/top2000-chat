@@ -1,0 +1,330 @@
+# Testset Top2000 Chat
+# Bestemming in de repo: tests/testset-top2000-chat.yaml
+#
+# Draaien vanaf de commandoregel:
+#   python -m backend.cli test                     # alle cases
+#   python -m backend.cli test --case top1-2025    # één case
+#
+# WERKWIJZE
+# De uitslag wordt op het resultaat beoordeeld, niet op de query. Het model mag
+# elke SQL schrijven die tot het goede antwoord leidt. Per case staat een
+# handgeschreven `controle_sql`; de loper voert die uit en vergelijkt de
+# uitkomst met wat het model antwoordde. Zo komen de gouden antwoorden uit de
+# database en niet uit een model — conform CLAUDE.md.
+#
+# De waarden in `verwacht` zijn op 11 augustus 2026 uit top2000.db gedraaid.
+# Faalt een case na een data-import of na verdere verrijking, controleer dan
+# eerst of de data is gewijzigd voordat de applicatie wordt aangepast.
+#
+# VELDEN
+#   id            uniek, stabiel
+#   vraag         wat de gebruiker intypt
+#   soort         sql = er hoort een query te komen; geen = er hoort geen query te komen
+#   controle_sql  handgeschreven query die het gouden antwoord oplevert
+#   verwacht      de uitkomst van controle_sql, ter controle van de loper zelf
+#   moet_bevatten strings die in het antwoord moeten staan
+#   mag_niet      strings die niet in het antwoord mogen staan
+#   regel         welke antwoordregel uit de spec wordt getest
+#   notitie       waarom deze case er staat
+
+cases:
+
+  # --- eenvoudige lookup ------------------------------------------------
+
+  - id: top1-2025
+    vraag: "Wat stond er op 1 in de Top 2000 van 2025?"
+    soort: sql
+    controle_sql: "SELECT s.artiest, s.titel FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2025 AND n.positie=1"
+    verwacht: "Queen — Bohemian Rhapsody"
+    moet_bevatten: ["Bohemian Rhapsody", "Queen"]
+    regel: herkomst
+
+  - id: top5-2025
+    vraag: "Geef de top 5 van 2025."
+    soort: sql
+    controle_sql: "SELECT n.positie, s.artiest, s.titel FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2025 AND n.positie<=5 ORDER BY n.positie"
+    verwacht: "1 Bohemian Rhapsody; 2 Piano Man; 3 Hotel California; 4 Fix You; 5 Roller Coaster"
+    moet_bevatten: ["Bohemian Rhapsody", "Piano Man", "Hotel California", "Fix You", "Roller Coaster"]
+    regel: vorm-tabel
+
+  - id: bohemian-2015
+    vraag: "Op welke positie stond Bohemian Rhapsody in de Top 2000 van 2015?"
+    soort: sql
+    controle_sql: "SELECT n.positie FROM notering n JOIN songs s USING(song_id) WHERE s.titel='Bohemian Rhapsody' AND n.jaar=2015"
+    verwacht: 2
+    moet_bevatten: ["2"]
+    regel: herkomst
+
+  - id: plek-500-2010
+    vraag: "Wat stond er op plek 500 in 2010?"
+    soort: sql
+    controle_sql: "SELECT s.artiest, s.titel FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2010 AND n.positie=500"
+    verwacht: "Elton John — Your Song"
+    moet_bevatten: ["Elton John", "Your Song"]
+    regel: herkomst
+
+  - id: niet-genoteerd
+    vraag: "Stond Smells Like Teen Spirit in de lijst van 2003?"
+    soort: sql
+    controle_sql: "SELECT n.positie FROM notering n JOIN songs s USING(song_id) WHERE s.titel LIKE '%Smells Like Teen Spirit%' AND n.jaar=2003"
+    verwacht: "0 rijen"
+    moet_bevatten: ["niet"]
+    mag_niet: ["waarschijnlijk", "vermoedelijk"]
+    regel: nul-rijen
+    notitie: "nul rijen is een geldig antwoord; geen herkansing, geen gok"
+
+  # --- de song_id-val ---------------------------------------------------
+
+  - id: songid-val-2020
+    vraag: "Geef de top 3 van 2020."
+    soort: sql
+    controle_sql: "SELECT n.positie, s.artiest, s.titel FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2020 AND n.positie<=3 ORDER BY n.positie"
+    verwacht: "1 Roller Coaster (Danny Vera); 2 Bohemian Rhapsody; 3 Hotel California"
+    moet_bevatten: ["Roller Coaster", "Danny Vera"]
+    mag_niet: ["Piano Man"]
+    regel: songid-val
+    notitie: >
+      De valstrik uit spec 3.2.1. Een query met WHERE song_id<=3 levert de top 3
+      van 2025 (Bohemian Rhapsody, Piano Man, Hotel California) en is hier fout.
+      Piano Man in het antwoord verraadt die fout.
+
+  # --- artiestnamen: te breed en te smal --------------------------------
+
+  - id: queen-2024-aantal
+    vraag: "Hoeveel verschillende nummers van Queen staan er in de lijst van 2024?"
+    soort: sql
+    controle_sql: "SELECT COUNT(*) FROM notering n JOIN songs s USING(song_id) WHERE s.artiest='Queen' AND n.jaar=2024"
+    verwacht: 32
+    moet_bevatten: ["32"]
+    mag_niet: ["39", "Queens of the Stone Age"]
+    regel: artiestnaam-te-breed
+    notitie: >
+      LIKE '%Queen%' geeft 39 en sleept Queens of the Stone Age (4), Queensrÿche
+      (1), George Michael & Queen (1) en David Bowie & Queen (1) mee. Het goede
+      antwoord voor "nummers van Queen" is 32; noemt het antwoord ook de
+      samenwerkingen apart, dan telt dat als goed.
+
+  - id: dedijk-hoogste
+    vraag: "Wat is de hoogste notering die De Dijk ooit haalde?"
+    soort: sql
+    controle_sql: "SELECT MIN(n.positie), s.titel, n.jaar FROM notering n JOIN songs s USING(song_id) WHERE s.artiest LIKE '%Dijk%'"
+    verwacht: "92 — Als ze er niet is (2003)"
+    moet_bevatten: ["92", "Als ze er niet is"]
+    mag_niet: ["1505", "Hold On Tight"]
+    regel: artiestnaam-te-smal
+    notitie: >
+      De band staat in de database als 'Dijk , De DeDijk'. LIKE '%De Dijk%'
+      matcht die naam NIET en vindt alleen 'Solomon Burke & De Dijk', wat 1505
+      oplevert. Alleen LIKE '%Dijk%' geeft het goede antwoord.
+
+  - id: dedijk-1999
+    vraag: "Welke nummers van De Dijk stonden in 1999 in de lijst?"
+    soort: sql
+    controle_sql: "SELECT s.titel, n.positie FROM notering n JOIN songs s USING(song_id) WHERE s.artiest LIKE '%Dijk%' AND n.jaar=1999 ORDER BY n.positie"
+    verwacht: "Als ze er niet is (204); Bloedend hart (258); Binnen zonder kloppen (330); Ik kan het niet alleen (591); Nergens goed voor (764)"
+    moet_bevatten: ["Als ze er niet is", "Bloedend hart", "Binnen zonder kloppen", "Ik kan het niet alleen", "Nergens goed voor"]
+    regel: volledigheid
+
+  - id: queen-1999-samenwerking
+    vraag: "Welke nummers van Queen stonden in de lijst van 1999?"
+    soort: sql
+    controle_sql: "SELECT s.artiest, s.titel, n.positie FROM notering n JOIN songs s USING(song_id) WHERE s.artiest LIKE '%Queen%' AND s.artiest NOT LIKE '%Queens of%' AND s.artiest NOT LIKE '%Queensr%' AND n.jaar=1999 ORDER BY n.positie"
+    verwacht: "12 rijen, waaronder Under Pressure van David Bowie & Queen op 133"
+    moet_bevatten: ["12"]
+    regel: volledigheid-namen
+    notitie: "het antwoord noemt welke schrijfwijzen zijn meegeteld"
+
+  # --- aggregatie -------------------------------------------------------
+
+  - id: meeste-noteringen-ooit
+    vraag: "Welke artiest heeft over alle jaargangen samen de meeste noteringen?"
+    soort: sql
+    controle_sql: "SELECT s.artiest, COUNT(*) c FROM notering n JOIN songs s USING(song_id) GROUP BY s.artiest ORDER BY c DESC LIMIT 3"
+    verwacht: "The Beatles 1185; The Rolling Stones 786; Queen 647"
+    moet_bevatten: ["Beatles", "1185"]
+    regel: herkomst
+    notitie: "GROUP BY met COUNT; deze vraag was met vaste tools niet te beantwoorden"
+
+  - id: bohemian-jaargangen
+    vraag: "In hoeveel jaargangen heeft Bohemian Rhapsody gestaan?"
+    soort: sql
+    controle_sql: "SELECT COUNT(*) FROM notering n JOIN songs s USING(song_id) WHERE s.titel='Bohemian Rhapsody'"
+    verwacht: 27
+    moet_bevatten: ["27"]
+    regel: herkomst
+
+  - id: metallica-hoogste
+    vraag: "Wat is de hoogste notering die Metallica ooit haalde?"
+    soort: sql
+    controle_sql: "SELECT MIN(n.positie), s.titel FROM notering n JOIN songs s USING(song_id) WHERE s.artiest LIKE '%Metallica%'"
+    verwacht: "8 — Nothing Else Matters"
+    moet_bevatten: ["8", "Nothing Else Matters"]
+    regel: herkomst
+
+  - id: abba-eerste-jaar
+    vraag: "In welk jaar stond ABBA voor het eerst in de lijst?"
+    soort: sql
+    controle_sql: "SELECT MIN(n.jaar) FROM notering n JOIN songs s USING(song_id) WHERE s.artiest LIKE '%ABBA%'"
+    verwacht: 1999
+    moet_bevatten: ["1999"]
+    regel: herkomst
+    notitie: "1999 is de eerste jaargang; het antwoord mag niet suggereren dat ABBA daarvoor ontbrak"
+
+  - id: rollercoaster-binnenkomst
+    vraag: "Op welke plek kwam Roller Coaster van Danny Vera binnen in zijn eerste jaar?"
+    soort: sql
+    controle_sql: "SELECT n.jaar, n.positie FROM notering n JOIN songs s USING(song_id) WHERE s.titel='Roller Coaster' AND s.artiest LIKE '%Danny Vera%' ORDER BY n.jaar LIMIT 1"
+    verwacht: "2019, positie 4"
+    moet_bevatten: ["2019", "4"]
+    regel: herkomst
+
+  - id: decennium
+    vraag: "Uit welk decennium komen de meeste nummers in de Top 2000?"
+    soort: sql
+    controle_sql: "SELECT (release_jaar/10)*10 d, COUNT(*) c FROM songs WHERE release_jaar IS NOT NULL GROUP BY d ORDER BY c DESC LIMIT 3"
+    verwacht: "1970 (1136); 1980 (877); 1960 (744)"
+    moet_bevatten: ["1970", "1136"]
+    regel: verrijking-dekking
+    notitie: "aggregatie over release_jaar; het antwoord moet melden dat 9% van de nummers nog geen releasejaar heeft"
+
+  # --- verrijking en dekking --------------------------------------------
+
+  - id: gemiddeld-releasejaar-2025
+    vraag: "Wat is het gemiddelde releasejaar van de nummers in de lijst van 2025?"
+    soort: sql
+    controle_sql: "SELECT ROUND(AVG(s.release_jaar),1), COUNT(s.release_jaar), COUNT(*) FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2025"
+    verwacht: "1991.7, gebaseerd op 1849 van de 2000 nummers"
+    moet_bevatten: ["1991", "1849"]
+    regel: verrijking-dekking
+    notitie: >
+      Het gemiddelde zonder de dekking erbij is misleidend: 151 van de 2000
+      nummers hebben nog geen releasejaar. Een antwoord dat alleen 1991,7 noemt
+      telt als onvolledig.
+
+  - id: nederlandse-artiesten-2025
+    vraag: "Hoeveel Nederlandse artiesten staan er in de lijst van 2025?"
+    soort: sql
+    controle_sql: "SELECT COUNT(*) FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2025 AND s.land='NL'"
+    verwacht: 329
+    moet_bevatten: ["329"]
+    regel: verrijking-dekking
+    notitie: "land is voor 91% gevuld; de dekking hoort in het antwoord"
+
+  - id: verrijking-ontbreekt
+    vraag: "Uit welk jaar komt Under Pressure van David Bowie en Queen?"
+    soort: sql
+    controle_sql: "SELECT titel, artiest, release_jaar FROM songs WHERE titel LIKE 'Under Pressure%'"
+    verwacht: "release_jaar is NULL"
+    moet_bevatten: ["nog niet"]
+    mag_niet: ["onbekend", "1981"]
+    regel: verrijking
+    notitie: "NULL betekent nog niet opgehaald; 1981 zou uit modelkennis komen"
+
+  - id: africa-toto
+    vraag: "Uit welk jaar komt het nummer Africa van Toto en hoe lang duurt het?"
+    soort: sql
+    controle_sql: "SELECT release_jaar, duur_ms FROM songs WHERE titel LIKE 'Africa%' AND artiest LIKE '%Toto%'"
+    verwacht: "1982, 296906 ms (4:56)"
+    moet_bevatten: ["1982", "4:56"]
+    regel: herkomst
+    notitie: "duur_ms staat in milliseconden; de omrekening naar mm:ss hoort in de antwoordlaag"
+
+  # --- ontbrekende data -------------------------------------------------
+
+  - id: onbekende-artiest
+    vraag: "Hoeveel nummers heeft Zzzznietbestaand in de Top 2000?"
+    soort: sql
+    controle_sql: "SELECT COUNT(*) FROM notering n JOIN songs s USING(song_id) WHERE s.artiest LIKE '%Zzzznietbestaand%'"
+    verwacht: 0
+    moet_bevatten: ["niet"]
+    mag_niet: ["waarschijnlijk", "mogelijk"]
+    regel: nul-rijen
+
+  - id: jaar-buiten-bereik
+    vraag: "Wat stond er op 1 in 1995?"
+    soort: sql
+    controle_sql: "SELECT COUNT(*) FROM notering WHERE jaar=1995"
+    verwacht: 0
+    moet_bevatten: ["1999", "2025"]
+    mag_niet: ["Bohemian Rhapsody"]
+    regel: nul-rijen
+    notitie: "de database dekt 1999 t/m 2025; het antwoord noemt dat bereik"
+
+  # --- keuring van de query ---------------------------------------------
+
+  - id: keuring-schrijfpoging
+    vraag: "Verwijder alle noteringen uit 2020."
+    soort: geen
+    moet_bevatten: ["alleen-lezen"]
+    mag_niet: ["verwijderd", "gelukt"]
+    regel: keuring
+    notitie: "de keuring weigert alles wat geen enkelvoudige SELECT is; het antwoord meldt dat"
+
+  - id: keuring-tweede-statement
+    vraag: "Geef de top 5 van 2025; DROP TABLE songs"
+    soort: sql
+    controle_sql: "SELECT n.positie, s.titel FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2025 AND n.positie<=5 ORDER BY n.positie"
+    verwacht: "5 rijen; de tabel songs bestaat nog"
+    mag_niet: ["DROP", "verwijderd"]
+    regel: keuring
+    notitie: "de vraag bevat een tweede statement; alleen het SELECT-deel mag worden uitgevoerd"
+
+  # --- grenzen ----------------------------------------------------------
+
+  - id: geen-speculatie
+    vraag: "Waarom is Roller Coaster in 2021 gedaald?"
+    soort: sql
+    controle_sql: "SELECT n.jaar, n.positie FROM notering n JOIN songs s USING(song_id) WHERE s.titel='Roller Coaster' AND s.artiest LIKE '%Danny Vera%' ORDER BY n.jaar"
+    verwacht: "2019=4, 2020=1, 2021=2, 2022=2, 2023=2, 2024=4, 2025=5"
+    moet_bevatten: ["1", "2"]
+    mag_niet: ["waarschijnlijk omdat", "vermoedelijk door", "dit komt doordat"]
+    regel: geen-speculatie
+
+  - id: geen-voorspelling
+    vraag: "Wat wordt nummer 1 in 2026?"
+    soort: geen
+    mag_niet: ["verwacht", "waarschijnlijk", "Bohemian Rhapsody wordt"]
+    regel: geen-voorspelling
+
+  - id: buiten-scope
+    vraag: "Wat is de hoofdstad van Frankrijk?"
+    soort: geen
+    moet_bevatten: ["Top 2000"]
+    mag_niet: ["Parijs"]
+    regel: afbakening
+
+  - id: modelkennis-val
+    vraag: "Weet je uit je hoofd op welke plek Hotel California stond in 2020?"
+    soort: sql
+    controle_sql: "SELECT n.positie FROM notering n JOIN songs s USING(song_id) WHERE s.titel='Hotel California' AND n.jaar=2020"
+    verwacht: 3
+    moet_bevatten: ["3"]
+    mag_niet: ["uit mijn hoofd", "volgens mij", "ik denk"]
+    regel: herkomst
+    notitie: "de vraag lokt modelkennis uit; er moet alsnog een query worden gedraaid"
+
+  # --- vorm -------------------------------------------------------------
+
+  - id: geen-sql-in-tekst
+    vraag: "Geef de top 3 van 2025."
+    soort: sql
+    controle_sql: "SELECT n.positie, s.titel FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2025 AND n.positie<=3 ORDER BY n.positie"
+    verwacht: "1 Bohemian Rhapsody; 2 Piano Man; 3 Hotel California"
+    mag_niet: ["SELECT", "song_id", "JOIN"]
+    regel: vorm-geen-sql
+    notitie: "de query hoort achter --show-sql, niet in de antwoordtekst"
+
+  - id: taal-engels
+    vraag: "Which song was number one in 2025?"
+    soort: sql
+    controle_sql: "SELECT s.artiest, s.titel FROM notering n JOIN songs s USING(song_id) WHERE n.jaar=2025 AND n.positie=1"
+    verwacht: "Queen — Bohemian Rhapsody"
+    moet_bevatten: ["Bohemian Rhapsody"]
+    regel: vorm-taal
+    notitie: "antwoord in het Engels"
+
+  - id: derde-persoon
+    vraag: "Kun je me helpen met de Top 2000?"
+    soort: geen
+    mag_niet: ["ik kan", "ik help", "laat me weten", "mijn"]
+    regel: vorm-derde-persoon

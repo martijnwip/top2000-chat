@@ -1,0 +1,32 @@
+# Afgeleide en opgehaalde bestanden horen niet in git: ze zijn groot en
+# opnieuw te maken uit de scripts. Handgemaakte data en meetlatten wel.
+
+# Afgeleid uit data/top2000.csv via de laadpijplijn
+top2000.db
+
+# Afgeleid uit de database en de caches
+data/corpus_songs.jsonl
+data/corpus_artiesten.jsonl
+
+# Afgeleid uit de corpora met bge-m3; 277 MB
+data/rag_index.db
+
+# Caches van externe API's. Buiten git houden, maar niet weggooien:
+# opnieuw ophalen kost duizenden verzoeken aan MusicBrainz en Wikidata.
+data/mb_cache/
+data/wikidata_cache/
+
+# Ruwe download van de bronlijst; opnieuw op te halen met parse_wikipedia.py
+data/top2000.html
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Systeem en editor
+.DS_Store
+.idea/
+.vscode/

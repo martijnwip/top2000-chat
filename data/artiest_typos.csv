@@ -1,0 +1,25 @@
+invoer,verwacht,soort,toelichting
+Rudi Carell,Rudi Carrell,typo,de fout die dit hele stuk in gang zette
+Fleedwood Mac,Fleetwood Mac,typo,
+Bruce Springsteem,Bruce Springsteen,typo,laatste letter
+Metalica,Metallica,typo,dubbele letter weggevallen
+Nirvanna,Nirvana,typo,dubbele letter te veel
+Coldpay,Coldplay,typo,letter weggevallen
+Pink Floid,Pink Floyd,typo,
+Led Zepplin,Led Zeppelin,typo,
+the beattles,The Beatles,typo,ook kleine letters
+beyonce,Beyoncé,accent,accent weggelaten
+Andre Hazes,André Hazes,accent,let op: André Hazes jr. bestaat ook
+Bowie,David Bowie,deelnaam,editafstand faalt hier; woordmatch hoort dit te vangen
+Beatles,The Beatles,deelnaam,lidwoord weggelaten
+Springsteen,Bruce Springsteen,deelnaam,alleen achternaam
+Rolling Stones,The Rolling Stones,deelnaam,
+Simon and Garfunkel,Simon & Garfunkel,variant,and in plaats van &
+Guns n Roses,Guns N' Roses,variant,apostrof weggelaten
+Golden Earing,Golden Earring,typo,let op: Golden Earrings bestaat ook
+Danny Vera,Danny Vera,exact,controle: exacte naam hoort zichzelf te geven
+Queen,Queen,exact,controle
+Doe Maar,Doe Maar,exact,controle
+Racoon,Racoon,exact,controle -- eigennaam die op een typefout lijkt
+xyzzy qwerty,,onzin,hoort NIETS terug te geven
+Frobnicator,,onzin,hoort NIETS terug te geven
