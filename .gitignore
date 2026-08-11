@@ -1,22 +1,27 @@
-# Afgeleide en opgehaalde bestanden horen niet in git: ze zijn groot en
-# opnieuw te maken uit de scripts. Handgemaakte data en meetlatten wel.
+# Buiten git om de omvang: samen 629 MB, en GitHub weigert bestanden boven
+# 100 MB. Deze bestanden komen uit het eerdere ophaal- en verrijkingsproject;
+# de scripts die ze maakten horen niet in deze repo. Ze zijn hier dus niet
+# opnieuw te bouwen -- wie deze repo kloont, moet ze apart aanleveren.
+# Handgemaakte data en meetlatten staan wel in git.
 
-# Afgeleid uit data/top2000.csv via de laadpijplijn
+# 48 MB
 top2000.db
 
-# Afgeleid uit de database en de caches
+# 31 MB en 5,4 MB
 data/corpus_songs.jsonl
 data/corpus_artiesten.jsonl
 
-# Afgeleid uit de corpora met bge-m3; 277 MB
+# 277 MB; chunks en bge-m3-vectoren
 data/rag_index.db
 
-# Caches van externe API's. Buiten git houden, maar niet weggooien:
-# opnieuw ophalen kost duizenden verzoeken aan MusicBrainz en Wikidata.
+# Caches van externe API's, samen 314 MB. Buiten git houden, maar niet
+# weggooien: opnieuw ophalen kost duizenden verzoeken aan MusicBrainz en
+# Wikidata.
 data/mb_cache/
 data/wikidata_cache/
 
-# Ruwe download van de bronlijst; opnieuw op te halen met parse_wikipedia.py
+# Ruwe download van de bronlijst; het geparste resultaat staat in
+# data/top2000.csv en dat zit wel in git
 data/top2000.html
 
 # Python

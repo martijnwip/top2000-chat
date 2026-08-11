@@ -1,35 +1,35 @@
 artiest,titel,release_jaar,notitie
 # GOLD SET voor releasejaren. Handmatig vastgesteld; dit is de meetlat waartegen
-# select_mb.py wordt afgerekend. Regels die met # beginnen worden overgeslagen.
+# de verrijking wordt afgerekend. Regels die met # beginnen worden overgeslagen.
 #
 # DEFINITIE (belangrijk): het jaar van de VROEGSTE OFFICIELE UITGAVE van de
 # opname, album of single -- wat het eerst kwam. Daarom is Go Your Own Way 1976
 # (single december) en niet 1977 (Rumours). Wijk je hiervan af, pas dan ook de
-# filters in select_mb.py aan, anders lijkt een definitieverschil op een bug.
+# filters van de verrijking aan, anders lijkt een definitieverschil op een bug.
 #
 # LEGE release_jaar = nog niet met zekerheid vastgesteld; die regels tellen niet
 # mee in de score. Vul ze zelf aan uit een tweede bron voordat je ze vertrouwt.
 #
-# De kolom 'notitie' bevat bij een aantal regels wat enrich.py ervan maakte,
+# De kolom 'notitie' bevat bij een aantal regels wat de verrijking ervan maakte,
 # zodat je ziet welke faalmodus die regel afdekt.
 Queen,Bohemian Rhapsody,1975,
 Billy Joel,Piano Man,1973,
 Eagles,Hotel California,1976,album dec 1976; single pas feb 1977
 Coldplay,Fix You,2005,
 Danny Vera,Roller Coaster,2019,
-Pearl Jam,Black,1991,Ten verscheen aug 1991 -- enrich.py zei 1990
+Pearl Jam,Black,1991,Ten verscheen aug 1991 -- verrijking zei 1990
 Led Zeppelin,Stairway to Heaven,1971,
-Golden Earring,Radar Love,1973,Moontan 1973 -- enrich.py zei 1971
-Pink Floyd,Wish You Were Here,1975,enrich.py zei 1981 (live-versie won van studio-opname zonder datum)
+Golden Earring,Radar Love,1973,Moontan 1973 -- verrijking zei 1971
+Pink Floyd,Wish You Were Here,1975,verrijking zei 1981 (live-versie won van studio-opname zonder datum)
 Metallica,Nothing Else Matters,1991,album aug 1991; single 1992 -- definitie bepaalt het antwoord
 Dire Straits,Brothers in Arms,1985,
 Dire Straits,Sultans of Swing,1978,
 Queen,Love of My Life,1975,
 Pink Floyd,Comfortably Numb,1979,
-Guns N' Roses,November Rain,1991,Use Your Illusion I -- enrich.py zei 1986 (demo/bootleg won)
+Guns N' Roses,November Rain,1991,Use Your Illusion I -- verrijking zei 1986 (demo/bootleg won)
 The Beach Boys,God Only Knows,1966,
 Dire Straits,Telegraph Road,1982,
-The Cure,A Forest,1980,Seventeen Seconds apr 1980 -- enrich.py zei 1981
+The Cure,A Forest,1980,Seventeen Seconds apr 1980 -- verrijking zei 1981
 Disturbed,The Sound of Silence,2015,cover; jaar van deze opname, niet van het origineel uit 1964
 Toto,Africa,1982,
 Deep Purple,Child in Time,1970,
@@ -40,13 +40,13 @@ Radiohead,Creep,1992,
 Klein Orkest,Over de muur,1984,
 AC/DC,Thunderstruck,1990,
 Fleetwood Mac,The Chain,1977,
-Metallica,One,1988,And Justice for All aug 1988 -- enrich.py zei 1991
+Metallica,One,1988,And Justice for All aug 1988 -- verrijking zei 1991
 Linkin Park,In the End,2000,Hybrid Theory okt 2000; single 2001
 Bruce Springsteen,The River,1980,
 Phil Collins,In the Air Tonight,1981,
 Nirvana,Smells Like Teen Spirit,1991,
-David Bowie,Heroes,1977,enrich.py zei 1979
+David Bowie,Heroes,1977,verrijking zei 1979
 Michael Kiwanuka,Cold Little Heart,2016,
-Boudewijn de Groot,Avond,,TE VERIFIEREN -- enrich.py zei 1996
-Racoon,Oceaan,,TE VERIFIEREN -- album of single? enrich.py zei 2012
-Marco Borsato,De waarheid,,TE VERIFIEREN -- enrich.py zei 1996
+Boudewijn de Groot,Avond,,TE VERIFIEREN -- verrijking zei 1996
+Racoon,Oceaan,,TE VERIFIEREN -- album of single? verrijking zei 2012
+Marco Borsato,De waarheid,,TE VERIFIEREN -- verrijking zei 1996

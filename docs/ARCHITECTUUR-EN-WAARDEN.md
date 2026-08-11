@@ -21,11 +21,12 @@ zichtbaar in plaats van verstopt achter een claim.
   27 jaargangen). Validatie: elke jaargang telt precies 2000 noteringen.
 - **Database:** SQLite, twee tabellen (`songs`, `notering`) met een stabiele
   `song_id` die genormaliseerde verrijking later mogelijk maakt.
-- **Pijplijn:** `parse_wikipedia.py` (bron → CSV) en `load.py` (CSV → database),
-  volledig reproduceerbaar uit de scripts.
-- **Vraag-laag:** `ask.py` en `chat.py` — een lokaal taalmodel vertaalt de vraag
-  naar SQL, een read-only SQLite-verbinding voert die uit. Model in overgang van
-  `gemma4` naar `qwen2.5-coder:32b`, lokaal via Ollama.
+- **Herkomst van de data:** het ophalen, parsen en verrijken is in een eerder
+  project gedaan. Die scripts horen niet in deze repo; wat hier ligt is het
+  resultaat: `data/top2000.csv`, `top2000.db`, de corpora en `rag_index.db`.
+- **Vraag-laag:** nog te bouwen. Een lokaal taalmodel vertaalt de vraag naar
+  SQL, een read-only SQLite-verbinding voert die uit. Model: `qwen2.5-coder`
+  via Ollama. Zie `docs/spec-top2000-chat.md`.
 
 ## 3. Architectuurprincipes
 
@@ -55,8 +56,8 @@ kleinste werkbare opstelling is.
 - **Model:** open-weight, zelf gehost (Qwen2.5-Coder nu; Codestral 2 onder
   Apache 2.0 als waarden-alternatief in onderzoek).
 - **Runtime:** Ollama lokaal; te wisselen naar MLX (Apple Silicon) of een VPS.
-  Voorgenomen: `ask.py` naar de OpenAI-compatibele API zodat runtime én host
-  één configregel worden.
+  Voorgenomen: de modelaanroep via de OpenAI-compatibele API, zodat runtime én
+  host één configregel worden.
 - **Database:** SQLite (read-only in productie).
 - **Backend:** FastAPI (hergebruikt de bestaande Python-logica).
 - **Frontend:** één eenvoudige pagina met invoerveld en resultaattabel.
@@ -102,7 +103,7 @@ in `ontwikkeltijd_vs_draaitijd.svg` en als werkafspraak in `CLAUDE.md`.
 
 - Eval-set bouwen (resultaat-gebaseerd, gelijkspel toegestaan) om de kleinste
   werkbare modelopstelling te bewijzen.
-- `ask.py` naar de OpenAI-compatibele API voor wisselbare runtime/host.
+- De modelaanroep via de OpenAI-compatibele API voor wisselbare runtime/host.
 - Definitieve hostingkeuze (eigen M1 vs groene EU-VPS).
 - Verbruiksmeting per vraag als zichtbare functie in de demo.
 - Codestral 2 (Apache 2.0) via MLX als waarden-alternatief evalueren tegen Qwen.

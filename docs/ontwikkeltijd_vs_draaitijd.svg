@@ -43,19 +43,19 @@
   <text class="t" x="561" y="91" text-anchor="middle">Wikidata + Wikipedia</text>
   <text class="acct" x="676" y="90">NIEUW</text>
 
-  <!-- scripts -->
+  <!-- bewerkingsstappen -->
   <path class="ln"  d="M131 104 L131 130"/>
   <path class="ln"  d="M341 104 L341 130"/>
   <path class="lna" d="M561 104 L561 130"/>
 
   <rect class="box" x="36"  y="132" width="190" height="36" rx="6"/>
-  <text class="t" x="131" y="155" text-anchor="middle">parse_wikipedia.py</text>
+  <text class="t" x="131" y="155" text-anchor="middle">jaarlijsten parsen</text>
 
   <rect class="box" x="256" y="132" width="170" height="36" rx="6"/>
-  <text class="t" x="341" y="155" text-anchor="middle">fetch_mb · select_mb</text>
+  <text class="t" x="341" y="155" text-anchor="middle">ophalen · kiezen</text>
 
   <rect class="acc" x="456" y="132" width="210" height="36" rx="6"/>
-  <text class="t" x="561" y="155" text-anchor="middle">verrijk_wikidata.py</text>
+  <text class="t" x="561" y="155" text-anchor="middle">verrijken</text>
 
   <!-- convergentie naar de database -->
   <path class="ln"  d="M131 168 L131 186 L336 186 L336 202"/>
@@ -70,13 +70,13 @@
   <path class="ln" d="M246 227 L201 227 L201 288"/>
 
   <rect class="box"   x="126" y="290" width="150" height="40" rx="6"/>
-  <text class="t" x="201" y="308" text-anchor="middle">corpus_songs.py</text>
+  <text class="t" x="201" y="308" text-anchor="middle">corpus bouwen</text>
   <text class="s" x="201" y="322" text-anchor="middle">→ .jsonl</text>
 
   <path class="ln" d="M276 310 L310 310"/>
 
   <rect class="box"   x="316" y="290" width="150" height="40" rx="6"/>
-  <text class="t" x="391" y="308" text-anchor="middle">rag_index.py</text>
+  <text class="t" x="391" y="308" text-anchor="middle">index bouwen</text>
   <text class="s" x="391" y="322" text-anchor="middle">chunken · embedden</text>
 
   <path class="ln" d="M466 310 L500 310"/>
