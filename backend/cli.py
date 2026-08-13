@@ -1,0 +1,349 @@
+"""Commandoregel-interface. Zie docs/spec-top2000-chat.md §2a.
+
+Aanroep: python -m backend.cli <subcommando>
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sqlite3
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+import requests
+import yaml
+
+from backend import chat, llm
+from backend.sql.uitvoeren import QueryFout, QueryTimeout, voer_uit
+from backend.sql.veiligheid import OnveiligeQuery, keur
+
+DB_PAD = "top2000.db"
+OLLAMA_URL = "http://localhost:11434"
+STANDAARD_MODEL = llm.STANDAARD_MODEL
+TESTSET_PAD = "tests/testset-top2000-chat.yaml"
+
+
+def formatteer_rijen(rijen: list[dict]) -> str:
+    """Lijnt rijen uit in tekstkolommen. Geen Markdown-pipes, zie spec §5 'Vorm'."""
+
+    if not rijen:
+        return "(geen rijen)"
+
+    kolommen = list(rijen[0].keys())
+    breedtes = {
+        kolom: max(len(kolom), max(len(str(rij.get(kolom, ""))) for rij in rijen))
+        for kolom in kolommen
+    }
+    kop = "  ".join(kolom.ljust(breedtes[kolom]) for kolom in kolommen)
+    lijn = "  ".join("-" * breedtes[kolom] for kolom in kolommen)
+    inhoud = [
+        "  ".join(str(rij.get(kolom, "")).ljust(breedtes[kolom]) for kolom in kolommen)
+        for rij in rijen
+    ]
+    return "\n".join([kop, lijn, *inhoud])
+
+
+def cmd_check(args: argparse.Namespace) -> int:
+    ok = True
+
+    if not Path(DB_PAD).exists():
+        print(f"database:  NIET GEVONDEN ({DB_PAD})", file=sys.stderr)
+        ok = False
+    else:
+        try:
+            verbinding = sqlite3.connect(f"file:{DB_PAD}?mode=ro", uri=True)
+            (aantal_songs,) = verbinding.execute("SELECT COUNT(*) FROM songs").fetchone()
+            (aantal_noteringen,) = verbinding.execute("SELECT COUNT(*) FROM notering").fetchone()
+            verbinding.close()
+            print(f"database:  ok — {aantal_songs} nummers, {aantal_noteringen} noteringen ({DB_PAD})")
+        except sqlite3.Error as fout:
+            print(f"database:  FOUT — {fout}", file=sys.stderr)
+            ok = False
+
+    try:
+        respons = requests.get(f"{OLLAMA_URL}/api/tags", timeout=3)
+        respons.raise_for_status()
+        modellen = {model["name"] for model in respons.json().get("models", [])}
+        print(f"ollama:    ok — bereikbaar op {OLLAMA_URL}")
+        if STANDAARD_MODEL in modellen:
+            print(f"model:     ok — {STANDAARD_MODEL} is geladen")
+        else:
+            print(
+                f"model:     NIET GEVONDEN — {STANDAARD_MODEL} staat niet in 'ollama list'",
+                file=sys.stderr,
+            )
+            ok = False
+    except requests.exceptions.RequestException as fout:
+        print(f"ollama:    NIET BEREIKBAAR op {OLLAMA_URL} — {fout}", file=sys.stderr)
+        ok = False
+
+    return 0 if ok else 2
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    try:
+        gekeurd = keur(args.query)
+    except OnveiligeQuery as fout:
+        print(f"query afgekeurd: {fout}", file=sys.stderr)
+        return 1
+
+    try:
+        resultaat = voer_uit(gekeurd, db_pad=DB_PAD)
+    except (QueryTimeout, QueryFout) as fout:
+        print(str(fout), file=sys.stderr)
+        return 1
+
+    print(formatteer_rijen(resultaat.rijen))
+    print(
+        f"\n{len(resultaat.rijen)} rij(en) — {resultaat.looptijd_s * 1000:.1f} ms",
+        file=sys.stderr,
+    )
+    return 0
+
+
+def cmd_sql(args: argparse.Namespace) -> int:
+    try:
+        resultaat = chat.vraag_naar_sql(args.vraag, model=args.model)
+    except llm.OllamaFout as fout:
+        print(str(fout), file=sys.stderr)
+        return 2
+
+    if not resultaat.gelukt:
+        print(resultaat.foutmelding, file=sys.stderr)
+        return 1
+
+    print(resultaat.sql)
+    print()
+    print(formatteer_rijen(resultaat.rijen))
+    print(
+        f"\n{len(resultaat.rijen)} rij(en) — {resultaat.pogingen} poging(en) — "
+        f"{resultaat.looptijd_s * 1000:.1f} ms",
+        file=sys.stderr,
+    )
+    return 0
+
+
+def _druk_resultaat_af(resultaat: chat.AntwoordResultaat, args: argparse.Namespace) -> int:
+    if args.geen_tekst:
+        if resultaat.sql is None:
+            print(resultaat.antwoord, file=sys.stderr)
+            return 1
+        print(resultaat.sql)
+        print()
+        print(formatteer_rijen(resultaat.rijen))
+        return 0 if resultaat.gelukt else 1
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "antwoord": resultaat.antwoord,
+                    "sql": resultaat.sql,
+                    "rijen": resultaat.rijen,
+                    "pogingen": resultaat.pogingen,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0 if resultaat.gelukt and resultaat.rijen else 1
+
+    print(resultaat.antwoord)
+    if args.show_sql:
+        print(
+            f"\nSQL: {resultaat.sql}\n"
+            f"{len(resultaat.rijen)} rij(en) — {resultaat.pogingen} poging(en) — "
+            f"{resultaat.looptijd_s * 1000:.1f} ms",
+            file=sys.stderr,
+        )
+    return 0 if resultaat.gelukt and resultaat.rijen else 1
+
+
+def cmd_ask(args: argparse.Namespace) -> int:
+    try:
+        resultaat = chat.antwoord(args.vraag, model=args.model)
+    except llm.OllamaFout as fout:
+        print(str(fout), file=sys.stderr)
+        return 2
+    return _druk_resultaat_af(resultaat, args)
+
+
+def cmd_chat(args: argparse.Namespace) -> int:
+    print("Top2000 Chat — /exit om te stoppen, /sql voor de laatste query.", file=sys.stderr)
+    laatste: chat.AntwoordResultaat | None = None
+    while True:
+        try:
+            regel = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print(file=sys.stderr)
+            break
+        if not regel:
+            continue
+        if regel == "/exit":
+            break
+        if regel == "/sql":
+            print(laatste.sql if laatste and laatste.sql else "(nog geen query)")
+            continue
+        try:
+            laatste = chat.antwoord(regel, model=args.model)
+        except llm.OllamaFout as fout:
+            print(str(fout), file=sys.stderr)
+            continue
+        _druk_resultaat_af(laatste, args)
+    return 0
+
+
+def _voeg_antwoordvlaggen_toe(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--show-sql", action="store_true", dest="show_sql", help="toont query, rijen en looptijd")
+    parser.add_argument("--json", action="store_true", dest="json", help="machineleesbare uitvoer")
+    parser.add_argument("--model", default=STANDAARD_MODEL, dest="model", help="overschrijft het model uit de config")
+    parser.add_argument(
+        "--geen-tekst", action="store_true", dest="geen_tekst", help="stopt na stap 1; gelijk aan 'sql'"
+    )
+
+
+@dataclass
+class CaseResultaat:
+    case_id: str
+    geslaagd: bool
+    ontbrekend: list[str]
+    onterecht_aanwezig: list[str]
+    antwoord: str
+    sql: str | None
+    looptijd_s: float
+    zelfcontrole_fout: str | None
+
+
+def _laad_testset(pad: str = TESTSET_PAD) -> list[dict]:
+    with open(pad, encoding="utf-8") as bestand:
+        inhoud = yaml.safe_load(bestand)
+    return inhoud["cases"]
+
+
+def _voer_case_uit(case: dict, model: str) -> CaseResultaat:
+    """Draait één testcase: zelfcontrole van controle_sql, dan de echte vraag.
+
+    Zelfcontrole toetst alleen of controle_sql nog probleemloos draait tegen
+    de huidige database (drift-detectie); geslaagd/gefaald van de case zelf
+    hangt uitsluitend af van moet_bevatten/mag_niet op het modelantwoord —
+    de beoordeling gaat op het resultaat, niet op de gegenereerde query.
+    """
+
+    zelfcontrole_fout: str | None = None
+    controle_sql = case.get("controle_sql")
+    if controle_sql:
+        try:
+            voer_uit(keur(controle_sql))
+        except (OnveiligeQuery, QueryFout, QueryTimeout) as fout:
+            zelfcontrole_fout = str(fout)
+
+    resultaat = chat.antwoord(case["vraag"], model=model)
+    antwoord_laag = resultaat.antwoord.lower()
+
+    ontbrekend = [s for s in case.get("moet_bevatten") or [] if s.lower() not in antwoord_laag]
+    onterecht_aanwezig = [s for s in case.get("mag_niet") or [] if s.lower() in antwoord_laag]
+
+    return CaseResultaat(
+        case_id=case["id"],
+        geslaagd=not ontbrekend and not onterecht_aanwezig,
+        ontbrekend=ontbrekend,
+        onterecht_aanwezig=onterecht_aanwezig,
+        antwoord=resultaat.antwoord,
+        sql=resultaat.sql,
+        looptijd_s=resultaat.looptijd_s,
+        zelfcontrole_fout=zelfcontrole_fout,
+    )
+
+
+def cmd_test(args: argparse.Namespace) -> int:
+    try:
+        cases = _laad_testset()
+    except (OSError, yaml.YAMLError) as fout:
+        print(f"testset niet te laden: {fout}", file=sys.stderr)
+        return 2
+
+    if args.case:
+        cases = [c for c in cases if c["id"] == args.case]
+        if not cases:
+            print(f"geen case met id '{args.case}'", file=sys.stderr)
+            return 2
+
+    resultaten: list[CaseResultaat] = []
+    for case in cases:
+        try:
+            resultaten.append(_voer_case_uit(case, model=args.model))
+        except llm.OllamaFout as fout:
+            print(str(fout), file=sys.stderr)
+            return 2
+
+    for resultaat in resultaten:
+        status = "OK  " if resultaat.geslaagd else "FOUT"
+        print(f"{status}  {resultaat.case_id}  ({resultaat.looptijd_s:.1f}s)")
+        if resultaat.zelfcontrole_fout:
+            print(
+                f"      let op: controle_sql faalt tegen de huidige database — {resultaat.zelfcontrole_fout}",
+                file=sys.stderr,
+            )
+        if not resultaat.geslaagd:
+            if resultaat.ontbrekend:
+                print(f"      ontbreekt in antwoord: {resultaat.ontbrekend}", file=sys.stderr)
+            if resultaat.onterecht_aanwezig:
+                print(f"      mag niet voorkomen: {resultaat.onterecht_aanwezig}", file=sys.stderr)
+            print(f"      antwoord: {resultaat.antwoord!r}", file=sys.stderr)
+            if resultaat.sql:
+                print(f"      sql: {resultaat.sql}", file=sys.stderr)
+
+    aantal_geslaagd = sum(1 for r in resultaten if r.geslaagd)
+    gemiddelde_looptijd = (
+        sum(r.looptijd_s for r in resultaten) / len(resultaten) if resultaten else 0.0
+    )
+    print(
+        f"\nmodel: {args.model} — {aantal_geslaagd}/{len(resultaten)} geslaagd — "
+        f"gemiddelde looptijd {gemiddelde_looptijd:.1f}s"
+    )
+
+    return 0 if aantal_geslaagd == len(resultaten) else 1
+
+
+def bouw_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="python -m backend.cli")
+    subparsers = parser.add_subparsers(dest="subcommando", required=True)
+
+    p_check = subparsers.add_parser("check", help="status van database, Ollama en modelnaam")
+    p_check.set_defaults(func=cmd_check)
+
+    p_run = subparsers.add_parser("run", help="voert een handgeschreven query uit, geen model nodig")
+    p_run.add_argument("query")
+    p_run.set_defaults(func=cmd_run)
+
+    p_sql = subparsers.add_parser("sql", help="alleen stap 1: toont de gegenereerde query en de rijen")
+    p_sql.add_argument("vraag")
+    p_sql.add_argument("--model", default=STANDAARD_MODEL, help="overschrijft het model uit de config")
+    p_sql.set_defaults(func=cmd_sql)
+
+    p_ask = subparsers.add_parser("ask", help="één vraag, antwoord naar stdout")
+    p_ask.add_argument("vraag")
+    _voeg_antwoordvlaggen_toe(p_ask)
+    p_ask.set_defaults(func=cmd_ask)
+
+    p_chat = subparsers.add_parser("chat", help="interactieve sessie")
+    _voeg_antwoordvlaggen_toe(p_chat)
+    p_chat.set_defaults(func=cmd_chat)
+
+    p_test = subparsers.add_parser("test", help="draait tests/testset-top2000-chat.yaml")
+    p_test.add_argument("--case", default=None, help="draait alleen de case met dit id")
+    p_test.add_argument("--model", default=STANDAARD_MODEL, help="overschrijft het model uit de config")
+    p_test.set_defaults(func=cmd_test)
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = bouw_parser()
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
