@@ -36,7 +36,7 @@ def controleer_versie(con, model: str = rag_index.EMBED_MODEL) -> None:
     er valt dan niets te vergelijken.
     """
     rij = con.execute(
-        "SELECT embed_model FROM index_versie ORDER BY gebouwd_op DESC LIMIT 1"
+        "SELECT embed_model FROM index_versie ORDER BY gebouwd_op DESC, rowid DESC LIMIT 1"
     ).fetchone()
     if rij is None:
         print(

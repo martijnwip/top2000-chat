@@ -1,0 +1,122 @@
+#root {
+  padding: 32px 24px 64px;
+  text-align: left;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.ondertitel {
+  text-align: center;
+  color: var(--text);
+  margin-bottom: 32px;
+}
+
+.vraagform {
+  display: flex;
+  gap: 8px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.vraagform input {
+  flex: 1;
+  font: inherit;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.vraagform input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.vraagform button {
+  font: inherit;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.vraagform button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fout {
+  max-width: 640px;
+  margin: 16px auto 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.antwoord {
+  max-width: 640px;
+  margin: 24px auto 0;
+}
+
+.antwoordtekst {
+  white-space: pre-wrap;
+  font-size: 19px;
+  line-height: 150%;
+  color: var(--text-h);
+}
+
+.onderbouwing {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.onderbouwing summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.sql {
+  font-family: var(--mono);
+  font-size: 14px;
+  background: var(--code-bg);
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.tabel {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.tabel th,
+.tabel td {
+  text-align: left;
+  padding: 4px 10px 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tabel th {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.looptijd {
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 6px;
+}

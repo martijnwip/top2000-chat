@@ -73,7 +73,7 @@ def cmd_check(args: argparse.Namespace) -> int:
             rverbinding = rag_index.open_index(beantwoorder.RAG_DB_PAD)
             versie = rverbinding.execute(
                 "SELECT embed_model, aantal_chunks, chunk_strategie "
-                "FROM index_versie ORDER BY gebouwd_op DESC LIMIT 1").fetchone()
+                "FROM index_versie ORDER BY gebouwd_op DESC, rowid DESC LIMIT 1").fetchone()
             rverbinding.close()
             if versie:
                 print(f"rag-index: ok — {versie['aantal_chunks']} chunks, "

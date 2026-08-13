@@ -255,7 +255,8 @@ def registreer_versie(con: sqlite3.Connection, chunk_strategie: str,
 
 
 def toon_versie(con: sqlite3.Connection) -> None:
-    rijen = con.execute("SELECT * FROM index_versie ORDER BY gebouwd_op DESC").fetchall()
+    rijen = con.execute(
+        "SELECT * FROM index_versie ORDER BY gebouwd_op DESC, rowid DESC").fetchall()
     if not rijen:
         print("geen index_versie-rij; nog niet geregistreerd "
               "(python -m backend.rag.index versie --schrijf)")
