@@ -15,7 +15,7 @@ from pathlib import Path
 import requests
 import yaml
 
-from backend import beantwoorder, chat, llm
+from backend import beantwoorder, chat, llm, verbruik
 from backend.rag import antwoord as rag_antwoord
 from backend.rag import index as rag_index
 from backend.rag import zoek as rag_zoek
@@ -111,6 +111,15 @@ def cmd_check(args: argparse.Namespace) -> int:
         print(f"ollama:    NIET BEREIKBAAR op {OLLAMA_URL} — {fout}", file=sys.stderr)
         ok = False
 
+    if verbruik.MACMON_BESCHIKBAAR:
+        print("verbruik:  ok — macmon (echte cpu+gpu-meting, geen sudo)")
+    else:
+        print(
+            "verbruik:  codecarbon-schatting — macmon niet beschikbaar "
+            "(alleen Apple Silicon; 'brew install macmon'). Dit cijfer sluit de gpu uit.",
+            file=sys.stderr,
+        )
+
     return 0 if ok else 2
 
 
@@ -196,6 +205,10 @@ def _druk_resultaat_af(resultaat: beantwoorder.GerouteerdResultaat, args: argpar
                     "pogingen": resultaat.pogingen,
                     "bronnen": resultaat.bronnen,
                     "cosine": resultaat.cosine,
+                    "energie_wh": resultaat.energie_wh,
+                    "co2_g": resultaat.co2_g,
+                    "verbruik_bron": resultaat.verbruik_bron,
+                    "verbruik_dekking": resultaat.verbruik_dekking,
                 },
                 ensure_ascii=False,
             )
@@ -204,12 +217,19 @@ def _druk_resultaat_af(resultaat: beantwoorder.GerouteerdResultaat, args: argpar
 
     print(resultaat.antwoord)
     if args.show_sql:
+        verbruik_regel = (
+            f"verbruik: {resultaat.energie_wh:.3f} Wh, {resultaat.co2_g:.3f} g CO2 "
+            f"({resultaat.verbruik_bron}: {resultaat.verbruik_dekking})"
+            if resultaat.verbruik_bron
+            else "verbruik: niet gemeten"
+        )
         if resultaat.pad == "sql":
             print(
                 f"\npad: sql  (regel: {resultaat.regel})\n"
                 f"SQL: {resultaat.sql}\n"
                 f"{len(resultaat.rijen)} rij(en) — {resultaat.pogingen} poging(en) — "
-                f"{resultaat.looptijd_s * 1000:.1f} ms",
+                f"{resultaat.looptijd_s * 1000:.1f} ms\n"
+                f"{verbruik_regel}",
                 file=sys.stderr,
             )
         else:
@@ -217,7 +237,8 @@ def _druk_resultaat_af(resultaat: beantwoorder.GerouteerdResultaat, args: argpar
             print(
                 f"\npad: {resultaat.pad}  (regel: {resultaat.regel})\n"
                 f"bronnen:\n{_formatteer_bronnen(resultaat.bronnen)}\n"
-                f"beste cosine: {cosine_tekst}  —  {resultaat.looptijd_s:.1f}s",
+                f"beste cosine: {cosine_tekst}  —  {resultaat.looptijd_s:.1f}s\n"
+                f"{verbruik_regel}",
                 file=sys.stderr,
             )
     return 0 if resultaat.heeft_inhoud else 1

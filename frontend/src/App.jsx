@@ -36,6 +36,16 @@ function Tabel({ rijen }) {
   )
 }
 
+function Verbruik({ resultaat }) {
+  if (!resultaat.verbruik_bron) return null
+  return (
+    <p className="verbruik" title={resultaat.verbruik_dekking}>
+      {resultaat.energie_wh.toFixed(3)} Wh &middot; {resultaat.co2_g.toFixed(3)} g CO&#8322;
+      <span className="verbruik-bron"> ({resultaat.verbruik_bron})</span>
+    </p>
+  )
+}
+
 function Onderbouwing({ resultaat }) {
   const isRag = resultaat.pad !== 'sql'
   const rijen = isRag ? resultaat.bronnen : resultaat.rijen
@@ -60,6 +70,9 @@ function Onderbouwing({ resultaat }) {
           : ''}
         {!isRag ? ` · ${resultaat.pogingen} poging(en)` : ''}
       </p>
+      {resultaat.verbruik_dekking && (
+        <p className="verbruik-dekking">{resultaat.verbruik_dekking}</p>
+      )}
     </details>
   )
 }
@@ -123,6 +136,7 @@ export default function App() {
       {resultaat && (
         <section className="antwoord">
           <p className="antwoordtekst">{resultaat.antwoord}</p>
+          <Verbruik resultaat={resultaat} />
           <Onderbouwing resultaat={resultaat} />
         </section>
       )}
