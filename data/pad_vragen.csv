@@ -1,0 +1,31 @@
+vraag,verwacht_pad,gecontroleerd,toelichting
+"Wat is de hoogste notering van Abba?",sql,nee,"MIN(positie) -- exact te beantwoorden"
+"Hoe vaak stond Bohemian Rhapsody in de lijst?",sql,nee,
+"Welke artiest heeft de meeste nummers in de lijst van 2024?",sql,nee,
+"Welk nummer stond in 2025 op nummer 1?",sql,nee,
+"Hoeveel nummers uit 1975 staan in de lijst?",sql,nee,"jaar_lijst, niet release_jaar"
+"Welk nummer steeg het hardst tussen 2023 en 2024?",sql,nee,
+"Op welke positie stond Hotel California in 2020?",sql,nee,
+"Welke nummers van Queen stonden in de lijst van 2024?",sql,nee,
+"Hoeveel nummers van overleden artiesten staan in de laatste lijst?",sql,nee,"artiest_overleden IS NOT NULL"
+"Wat is de gemiddelde positie van De Dijk?",sql,nee,
+"Welke Nederlandse artiesten staan het vaakst in de lijst?",sql,nee,
+"Welke nummers van David Bowie kent de lijst?",sql,nee,"geen enkel signaal -- test van de terugval"
+"Staat Nirvana in de lijst?",sql,nee,"geen enkel signaal -- test van de terugval"
+"Welke nummers gaan over de vietnamoorlog?",rag_songs,nee,"SQL heeft geen kolom voor onderwerp"
+"Waar gaat Hotel California over?",rag_songs,nee,
+"Wat is de betekenis van Bohemian Rhapsody?",rag_songs,nee,
+"Welk nummer uit 1975 gaat over oorlog?",rag_songs,nee,"jaartal en omschrijving samen -- omschrijving hoort te winnen"
+"Welke nummers over de Vietnamoorlog stonden in 2024 in de lijst?",rag_songs,nee,"idem, met er ook nog 'in de lijst' bij"
+"Vertel iets over de achtergrond van Starman.",rag_songs,nee,
+"Welke nummers zijn geinspireerd door een sterfgeval?",rag_songs,nee,
+"Waarom schreef Bowie Space Oddity?",rag_songs,nee,
+"Hoeveel nummers gaan over de liefde?",rag_songs,nee,"telwoord en omschrijving samen; het antwoord wordt een selectie, geen telling"
+"Is het nodig om me te registreren voor deze applicatie?",rag_project,nee,"staat nu nergens in docs/ -- hoort 'niet gedocumenteerd' op te leveren"
+"Moet ik een account aanmaken?",rag_project,nee,
+"Welk model gebruikt deze toepassing?",rag_project,nee,
+"Worden mijn vragen opgeslagen of getrackt?",rag_project,nee,
+"Waar draait deze demo?",rag_project,nee,
+"Is de broncode openbaar?",rag_project,nee,
+"Hoe duurzaam is dit project?",rag_project,nee,
+"Wat kost het gebruik van deze app?",rag_project,nee,

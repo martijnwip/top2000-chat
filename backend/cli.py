@@ -15,7 +15,10 @@ from pathlib import Path
 import requests
 import yaml
 
-from backend import chat, llm
+from backend import beantwoorder, chat, llm
+from backend.rag import antwoord as rag_antwoord
+from backend.rag import index as rag_index
+from backend.rag import zoek as rag_zoek
 from backend.sql.uitvoeren import QueryFout, QueryTimeout, voer_uit
 from backend.sql.veiligheid import OnveiligeQuery, keur
 
@@ -62,19 +65,48 @@ def cmd_check(args: argparse.Namespace) -> int:
             print(f"database:  FOUT — {fout}", file=sys.stderr)
             ok = False
 
+    if not Path(beantwoorder.RAG_DB_PAD).exists():
+        print(f"rag-index: NIET GEVONDEN ({beantwoorder.RAG_DB_PAD})", file=sys.stderr)
+        ok = False
+    else:
+        try:
+            rverbinding = rag_index.open_index(beantwoorder.RAG_DB_PAD)
+            versie = rverbinding.execute(
+                "SELECT embed_model, aantal_chunks, chunk_strategie "
+                "FROM index_versie ORDER BY gebouwd_op DESC LIMIT 1").fetchone()
+            rverbinding.close()
+            if versie:
+                print(f"rag-index: ok — {versie['aantal_chunks']} chunks, "
+                      f"{versie['chunk_strategie']}, model {versie['embed_model']} "
+                      f"({beantwoorder.RAG_DB_PAD})")
+            else:
+                print(f"rag-index: ok, maar geen index_versie geregistreerd "
+                      f"({beantwoorder.RAG_DB_PAD})", file=sys.stderr)
+        except sqlite3.Error as fout:
+            print(f"rag-index: FOUT — {fout}", file=sys.stderr)
+            ok = False
+
     try:
         respons = requests.get(f"{OLLAMA_URL}/api/tags", timeout=3)
         respons.raise_for_status()
         modellen = {model["name"] for model in respons.json().get("models", [])}
         print(f"ollama:    ok — bereikbaar op {OLLAMA_URL}")
-        if STANDAARD_MODEL in modellen:
-            print(f"model:     ok — {STANDAARD_MODEL} is geladen")
-        else:
-            print(
-                f"model:     NIET GEVONDEN — {STANDAARD_MODEL} staat niet in 'ollama list'",
-                file=sys.stderr,
-            )
-            ok = False
+        for label, model_naam in (
+            ("model (sql)", STANDAARD_MODEL),
+            ("model (rag-generatie)", rag_antwoord.GEN_MODEL),
+            ("model (embedden)", rag_index.EMBED_MODEL),
+        ):
+            # Ollama registreert een naam zonder tag altijd als ':latest'
+            # ('bge-m3' staat in 'ollama list' als 'bge-m3:latest'), maar
+            # lost 'bge-m3' bij een aanroep gewoon op. Beide vormen tellen.
+            if model_naam in modellen or f"{model_naam}:latest" in modellen:
+                print(f"{label}: ok — {model_naam} is geladen")
+            else:
+                print(
+                    f"{label}: NIET GEVONDEN — {model_naam} staat niet in 'ollama list'",
+                    file=sys.stderr,
+                )
+                ok = False
     except requests.exceptions.RequestException as fout:
         print(f"ollama:    NIET BEREIKBAAR op {OLLAMA_URL} — {fout}", file=sys.stderr)
         ok = False
@@ -125,53 +157,88 @@ def cmd_sql(args: argparse.Namespace) -> int:
     return 0
 
 
-def _druk_resultaat_af(resultaat: chat.AntwoordResultaat, args: argparse.Namespace) -> int:
+def _formatteer_bronnen(bronnen: list[dict]) -> str:
+    if not bronnen:
+        return "(geen bronnen)"
+    rijen = [
+        {"bron": b["bron"], "kop": b["kop"] or "", "cosine": f"{b['cosine']:.3f}" if b.get("cosine") is not None else "—"}
+        for b in bronnen
+    ]
+    return formatteer_rijen(rijen)
+
+
+def _druk_resultaat_af(resultaat: beantwoorder.GerouteerdResultaat, args: argparse.Namespace) -> int:
     if args.geen_tekst:
-        if resultaat.sql is None:
-            print(resultaat.antwoord, file=sys.stderr)
-            return 1
-        print(resultaat.sql)
-        print()
-        print(formatteer_rijen(resultaat.rijen))
-        return 0 if resultaat.gelukt else 1
+        if resultaat.pad == "sql":
+            if resultaat.sql is None:
+                print(resultaat.antwoord, file=sys.stderr)
+                return 1
+            print(resultaat.sql)
+            print()
+            print(formatteer_rijen(resultaat.rijen))
+        else:
+            if not resultaat.bronnen:
+                print(resultaat.antwoord, file=sys.stderr)
+                return 1
+            print(_formatteer_bronnen(resultaat.bronnen))
+        return 0 if resultaat.heeft_inhoud else 1
 
     if args.json:
         print(
             json.dumps(
                 {
+                    "vraag": resultaat.vraag,
+                    "pad": resultaat.pad,
+                    "regel": resultaat.regel,
                     "antwoord": resultaat.antwoord,
                     "sql": resultaat.sql,
                     "rijen": resultaat.rijen,
                     "pogingen": resultaat.pogingen,
+                    "bronnen": resultaat.bronnen,
+                    "cosine": resultaat.cosine,
                 },
                 ensure_ascii=False,
             )
         )
-        return 0 if resultaat.gelukt and resultaat.rijen else 1
+        return 0 if resultaat.heeft_inhoud else 1
 
     print(resultaat.antwoord)
     if args.show_sql:
-        print(
-            f"\nSQL: {resultaat.sql}\n"
-            f"{len(resultaat.rijen)} rij(en) — {resultaat.pogingen} poging(en) — "
-            f"{resultaat.looptijd_s * 1000:.1f} ms",
-            file=sys.stderr,
-        )
-    return 0 if resultaat.gelukt and resultaat.rijen else 1
+        if resultaat.pad == "sql":
+            print(
+                f"\npad: sql  (regel: {resultaat.regel})\n"
+                f"SQL: {resultaat.sql}\n"
+                f"{len(resultaat.rijen)} rij(en) — {resultaat.pogingen} poging(en) — "
+                f"{resultaat.looptijd_s * 1000:.1f} ms",
+                file=sys.stderr,
+            )
+        else:
+            cosine_tekst = f"{resultaat.cosine:.3f}" if resultaat.cosine is not None else "—"
+            print(
+                f"\npad: {resultaat.pad}  (regel: {resultaat.regel})\n"
+                f"bronnen:\n{_formatteer_bronnen(resultaat.bronnen)}\n"
+                f"beste cosine: {cosine_tekst}  —  {resultaat.looptijd_s:.1f}s",
+                file=sys.stderr,
+            )
+    return 0 if resultaat.heeft_inhoud else 1
 
 
 def cmd_ask(args: argparse.Namespace) -> int:
     try:
-        resultaat = chat.antwoord(args.vraag, model=args.model)
-    except llm.OllamaFout as fout:
+        resultaat = beantwoorder.beantwoord(args.vraag, model=args.model)
+    except (llm.OllamaFout, rag_zoek.ModelMismatch) as fout:
         print(str(fout), file=sys.stderr)
         return 2
     return _druk_resultaat_af(resultaat, args)
 
 
 def cmd_chat(args: argparse.Namespace) -> int:
-    print("Top2000 Chat — /exit om te stoppen, /sql voor de laatste query.", file=sys.stderr)
-    laatste: chat.AntwoordResultaat | None = None
+    print(
+        "Top2000 Chat — /exit om te stoppen, /pad voor het laatst gekozen pad, "
+        "/sql voor de laatste query.",
+        file=sys.stderr,
+    )
+    laatste: beantwoorder.GerouteerdResultaat | None = None
     while True:
         try:
             regel = input("> ").strip()
@@ -182,12 +249,20 @@ def cmd_chat(args: argparse.Namespace) -> int:
             continue
         if regel == "/exit":
             break
+        if regel == "/pad":
+            print(f"{laatste.pad}  (regel: {laatste.regel})" if laatste else "(nog geen vraag)")
+            continue
         if regel == "/sql":
-            print(laatste.sql if laatste and laatste.sql else "(nog geen query)")
+            if laatste and laatste.pad == "sql" and laatste.sql:
+                print(laatste.sql)
+            elif laatste:
+                print(f"(geen SQL — de laatste vraag ging naar pad '{laatste.pad}')")
+            else:
+                print("(nog geen vraag)")
             continue
         try:
-            laatste = chat.antwoord(regel, model=args.model)
-        except llm.OllamaFout as fout:
+            laatste = beantwoorder.beantwoord(regel, model=args.model)
+        except (llm.OllamaFout, rag_zoek.ModelMismatch) as fout:
             print(str(fout), file=sys.stderr)
             continue
         _druk_resultaat_af(laatste, args)
@@ -195,11 +270,16 @@ def cmd_chat(args: argparse.Namespace) -> int:
 
 
 def _voeg_antwoordvlaggen_toe(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--show-sql", action="store_true", dest="show_sql", help="toont query, rijen en looptijd")
-    parser.add_argument("--json", action="store_true", dest="json", help="machineleesbare uitvoer")
-    parser.add_argument("--model", default=STANDAARD_MODEL, dest="model", help="overschrijft het model uit de config")
     parser.add_argument(
-        "--geen-tekst", action="store_true", dest="geen_tekst", help="stopt na stap 1; gelijk aan 'sql'"
+        "--show-sql", action="store_true", dest="show_sql",
+        help="toont het gekozen pad plus de query (sql) of de opgehaalde bronnen (rag)",
+    )
+    parser.add_argument("--json", action="store_true", dest="json", help="machineleesbare uitvoer")
+    parser.add_argument("--model", default=STANDAARD_MODEL, dest="model",
+                         help="overschrijft het sql-model uit de config")
+    parser.add_argument(
+        "--geen-tekst", action="store_true", dest="geen_tekst",
+        help="stopt vóór de antwoordtekst; toont de query+rijen (sql) of de bronnen (rag)",
     )
 
 
