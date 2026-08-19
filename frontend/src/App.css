@@ -69,6 +69,12 @@
   font-style: italic;
 }
 
+.stippen {
+  display: inline-block;
+  width: 1.5em;
+  text-align: left;
+}
+
 .invoergebied {
   flex: 0 0 auto;
   padding: 12px 24px 24px;
@@ -143,11 +149,81 @@
   color: var(--text-h);
 }
 
-.verbruik {
+.verbruik-knop {
+  max-width: 760px;
+  margin: 10px auto 0;
+}
+
+.verbruik-knop summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.verbruik-knop summary::-webkit-details-marker {
+  display: none;
+}
+
+.verbruik-knop summary:hover {
+  border-color: var(--accent-border);
+  color: var(--text-h);
+}
+
+.verbruik-detail {
+  max-width: 420px;
+  margin: 10px auto 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.wasbalk-rij {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wasbalk {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+.wasbalk-rij svg {
+  flex: 0 0 auto;
+  color: var(--text);
+}
+
+.wasbalk-vulling {
+  height: 100%;
+  min-width: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.wasbalk-tekst {
   margin-top: 8px;
   font-size: 13px;
   color: var(--text);
-  cursor: help;
+}
+
+.verbruik-cijfers {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-h);
 }
 
 .verbruik-bron {
