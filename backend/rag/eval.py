@@ -35,9 +35,12 @@ VRAGEN = "data/rag_vragen.csv"
 MODI = ("lexicaal", "vector", "hybride")
 
 VARIANTEN_METING1: list[tuple[str, dict]] = [
+    # "geen fusie bij lege BM25" stond hier ook, met min_lex_kandidaten >
+    # 0 -- verwijderd na meting 1: fts_escape() maakt van elke vraag een
+    # OR-reeks, dus BM25 levert altijd kandidaten en de voorwaarde in
+    # zoek.fuseer() (len(lex) < min_lex_kandidaten) sloeg nooit aan. De
+    # uitkomst was daardoor identiek aan "hybride, ongewogen (nul)".
     ("hybride, ongewogen (nul)", dict(w_vector=1.0, w_lexicaal=1.0, min_lex_kandidaten=0)),
-    ("geen fusie bij lege BM25", dict(w_vector=1.0, w_lexicaal=1.0,
-                                       min_lex_kandidaten=rag_zoek.MIN_LEX_KANDIDATEN)),
     ("w_lexicaal = 0,75", dict(w_vector=1.0, w_lexicaal=0.75,
                                 min_lex_kandidaten=rag_zoek.MIN_LEX_KANDIDATEN)),
     ("w_lexicaal = 0,50", dict(w_vector=1.0, w_lexicaal=0.50,
@@ -91,41 +94,60 @@ def meet(con, vragen: list[dict], corpus: str, k: int, toon_missers: bool,
     titels = titels or {}
     beantwoordbaar = [v for v in vragen if v["verwacht_song_id"].strip()]
     overig = [v for v in vragen if not v["verwacht_song_id"].strip()]
-    print(f"{len(beantwoordbaar)} vragen met een verwacht nummer, "
-          f"{len(overig)} zonder (afwezig/sql -- die meten we hier niet)")
+    niet_meetbaar = [v for v in beantwoordbaar
+                      if v.get("heeft_corpus_tekst", "ja").strip() == "nee"]
+    print(f"{len(beantwoordbaar)} vragen met een verwacht nummer"
+          + (f" (waarvan {len(niet_meetbaar)} zonder bruikbare corpustekst -- "
+             "apart gerapporteerd hieronder)" if niet_meetbaar else "")
+          + f", {len(overig)} zonder (afwezig/sql -- die meten we hier niet)")
     print(f"embedmodel: {model} via Ollama | corpus: {corpus} | k={k}\n")
 
-    per_cat: dict[tuple[str, str], list[int]] = {}
+    # per (categorie, modus) -> lijst van (rang, meetbaar), zodat de tabel
+    # hieronder tweemaal uit dezelfde Ollama-aanroepen gevuld kan worden.
+    per_cat: dict[tuple[str, str], list[tuple[int, bool]]] = {}
     missers: list[tuple] = []
     for v in beantwoordbaar:
         verwacht = int(v["verwacht_song_id"])
         cat = v["categorie"]
+        meetbaar = v.get("heeft_corpus_tekst", "ja").strip() != "nee"
         for modus in modus_lijst:
             treffers = rag_zoek.zoek(con, corpus, v["vraag"], modus, k, model,
                                       w_vector, w_lexicaal, min_lex_kandidaten)
             paren = song_treffers(treffers)
             ids = [s for s, _ in paren]
             rang = ids.index(verwacht) + 1 if verwacht in ids else 0
-            per_cat.setdefault((cat, modus), []).append(rang)
+            per_cat.setdefault((cat, modus), []).append((rang, meetbaar))
             if rang == 0 and toon_missers:
                 missers.append((modus, v["vraag"], verwacht, paren))
 
-    print(f"{'categorie':<14}{'modus':<11}{'top-1':>7}{'top-3':>7}{'top-' + str(k):>7}"
-          f"{'gem. rang':>11}")
-    print("-" * 57)
-    for cat in dict.fromkeys(v["categorie"] for v in beantwoordbaar):
-        for modus in modus_lijst:
-            rangen = per_cat.get((cat, modus), [])
-            if not rangen:
-                continue
-            n = len(rangen)
-            raak = [r for r in rangen if r]
-            print(f"{cat:<14}{modus:<11}"
-                  f"{sum(1 for r in rangen if r == 1) / n * 100:>6.0f}%"
-                  f"{sum(1 for r in raak if r <= 3) / n * 100:>6.0f}%"
-                  f"{len(raak) / n * 100:>6.0f}%"
-                  f"{(sum(raak) / len(raak) if raak else 0):>11.1f}")
-        print()
+    def print_tabel(alleen_meetbaar: bool) -> None:
+        print(f"{'categorie':<14}{'modus':<11}{'top-1':>7}{'top-3':>7}{'top-' + str(k):>7}"
+              f"{'gem. rang':>11}")
+        print("-" * 57)
+        for cat in dict.fromkeys(v["categorie"] for v in beantwoordbaar):
+            for modus in modus_lijst:
+                paren = per_cat.get((cat, modus), [])
+                if alleen_meetbaar:
+                    paren = [(r, m) for r, m in paren if m]
+                if not paren:
+                    continue
+                rangen = [r for r, _ in paren]
+                n = len(rangen)
+                raak = [r for r in rangen if r]
+                print(f"{cat:<14}{modus:<11}"
+                      f"{sum(1 for r in rangen if r == 1) / n * 100:>6.0f}%"
+                      f"{sum(1 for r in raak if r <= 3) / n * 100:>6.0f}%"
+                      f"{len(raak) / n * 100:>6.0f}%"
+                      f"{(sum(raak) / len(raak) if raak else 0):>11.1f}")
+            print()
+
+    print_tabel(alleen_meetbaar=False)
+
+    if niet_meetbaar:
+        meetbaar_n = len(beantwoordbaar) - len(niet_meetbaar)
+        print(f"Alleen meetbare vragen (heeft_corpus_tekst = ja, "
+              f"{meetbaar_n} van {len(beantwoordbaar)}):\n")
+        print_tabel(alleen_meetbaar=True)
 
     if missers:
         print("MISSERS (verwacht nummer niet in de top-k)")

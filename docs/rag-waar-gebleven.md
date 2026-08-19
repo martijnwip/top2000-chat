@@ -6,10 +6,11 @@
 
 - Text-to-SQL werkt (commit `026859e`).
 - `backend/rag/` staat: `index.py`, `zoek.py`, `eval.py`, met bouwen en zoeken
-  gescheiden. Nog niet gecommit.
+  gescheiden. Gecommit (`e395e06`, `4c10d34`).
 - Meting 1 is gedraaid op de bestaande index. Uitkomst: het gewicht van de
   lexicale helft verlagen brengt omschrijvingen van 8% naar 17% recall@5,
   zonder dat naam-vragen (100%) eronder lijden.
+- De drie kleine taken hieronder (§2) zijn gedaan, zie de uitkomsten daar.
 
 ## De stand van zaken in één alinea
 
@@ -47,17 +48,23 @@ De kolom `secties_in_artikel` laat zien of het artikel over de betekenis gaat.
 Staat daar alleen "Chart performance" en "Covers", dan is dat nummer geen goede
 kandidaat.
 
-### 2. Klein werk voor Claude Code (kan onafhankelijk van het handwerk)
+### 2. Klein werk voor Claude Code (kan onafhankelijk van het handwerk) — gedaan
 
-- Kolom `heeft_corpus_tekst` toevoegen aan `data/rag_vragen.csv`: `nee` voor
-  song 118 en 560, `ja` voor de rest. `eval.py` rapporteert dan twee getallen:
-  over alle vragen, en over alleen de meetbare.
-- De variant "geen fusie bij lege BM25" uit `zoek.py` halen. Die kan niet
-  aanslaan: `fts_escape` maakt van elke vraag een OR-reeks, dus BM25 levert
-  altijd kandidaten. Gemeten in meting 1, effect nul.
-- Controleren of de hybride top-5 bij `w_lexicaal = 0,25` gelijk is aan de
-  vector top-5. Zo ja, dan is de winst van meting 1 niet meer dan "BM25 buiten
-  de deur houden bij omschrijvingen" en hoort dat zo in het document te staan.
+- Kolom `heeft_corpus_tekst` toegevoegd aan `data/rag_vragen.csv`: `nee` voor
+  song 118 en 560, `ja` voor de rest (`nvt` voor de `afwezig`/`sql`-vragen,
+  net als `heeft_nl_tekst`). `eval.py` rapporteert nu twee tabellen: over alle
+  vragen, en over alleen de meetbare (18 van de 20).
+- De variant "geen fusie bij lege BM25" uit `VARIANTEN_METING1` in `eval.py`
+  gehaald. Kon niet aanslaan: `fts_escape` maakt van elke vraag een OR-reeks,
+  dus BM25 levert altijd kandidaten. Gemeten in meting 1, effect nul. De
+  onderliggende `min_lex_kandidaten`-optie in `zoek.py` blijft staan — dat is
+  algemene functionaliteit (§3a), niet deze ene dode testvariant.
+- Gecontroleerd of de hybride top-5 bij `w_lexicaal = 0,25` gelijk is aan de
+  vector top-5: per-vraag vergeleken over alle 20 vragen, 7 hebben een andere
+  top-5-samenstelling, maar in geen van die zeven verandert dat of het
+  verwachte nummer wél of niet in de top-5 staat. De winst van meting 1 bij
+  0,25 is dus niet meer dan "BM25 buiten de deur houden bij omschrijvingen" —
+  vastgelegd in `rag-chunkstrategie-en-meting.md` §5.
 
 ### 3. Daarna
 
@@ -66,10 +73,8 @@ omschrijvingsvragen. Meting 1 opnieuw draaien als nulmeting op die grotere set.
 Pas dán stap 5: herchunken naar zinsvensters en opnieuw embedden. Dat is de
 enige lange draai; zie `rag-chunkstrategie-en-meting.md` §2 en §7.
 
-## Twee dingen om niet te vergeten
+## Eén ding om niet te vergeten
 
 - **Opruimen van oude vectoren gebeurt ná stap 5**, en pas als de nieuwe
   chunkstrategie de betere blijkt. Zolang de oude vectoren er staan, is een stap
   terug gratis.
-- **Er ligt niet-gecommit werk in `backend/rag/`.** Vastleggen voordat er iets
-  anders gebeurt.

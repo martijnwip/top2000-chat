@@ -1,29 +1,29 @@
-vraag,categorie,verwacht_song_id,heeft_nl_tekst,gecontroleerd,toelichting
-"Bohemian Rhapsody van Queen",naam,1,ja,nee,titel en artiest staan letterlijk in de vraag
-"Wat weet je over Starman van David Bowie?",naam,367,ja,nee,
-"Hotel California",naam,3,ja,nee,
-"Radar Love van Golden Earring",naam,9,ja,nee,
-"Smells Like Teen Spirit",naam,39,ja,nee,
-"Eleanor Rigby van The Beatles",naam,427,ja,nee,
-"Perfect Day van Lou Reed",naam,234,ja,nee,
-"De Bom van Doe Maar",naam,287,ja,nee,
-"lied over een bokser die onterecht werd veroordeeld",omschrijving,398,ja,nee,verwacht: Hurricane
-"nummer over eenzaamheid met een strijkkwartet in plaats van een band",omschrijving,427,ja,nee,verwacht: Eleanor Rigby
-"Nederlandstalig nummer over de dreiging van een kernoorlog",omschrijving,287,ja,nee,verwacht: De Bom
-"lied dat klinkt als een liefdesliedje maar eigenlijk over bezitsdrang en bespieden gaat",omschrijving,197,ja,nee,verwacht: Every Breath You Take
-"nummer over een plek die je kunt verlaten maar die je nooit meer loslaat",omschrijving,3,ja,nee,verwacht: Hotel California
-"grungenummer dat het levensgevoel van een hele generatie ging samenvatten",omschrijving,39,ja,nee,verwacht: Smells Like Teen Spirit
-"lied over een wezen uit de ruimte dat contact zoekt met de jeugd",omschrijving,367,ja,nee,verwacht: Starman
-"nummer waarin de dood van een popmuzikant het einde van een tijdperk markeert",omschrijving,450,ja,nee,verwacht: American Pie
-"troostlied waarin de zanger belooft er te zijn als het iemand zwaar valt",omschrijving,100,ja,nee,verwacht: Bridge Over Troubled Water
-"nummer over een lange nachtelijke autorit",omschrijving,9,ja,nee,verwacht: Radar Love
-"protest tegen een schoolsysteem dat kinderen tot eenheidsworst kneedt",omschrijving,118,nee,nee,verwacht: Another Brick in the Wall -- LET OP geen Nederlandse tekst in het corpus
-"Nederlandstalig lied waarin de zanger een staatshoofd toespreekt over oorlog",omschrijving,560,nee,nee,verwacht: Welterusten meneer de president -- LET OP geen Nederlandse tekst
-"welk nummer werd in 2026 aan de lijst toegevoegd",afwezig,,nvt,nee,de lijst loopt tot 2025; hoort 'weet ik niet' op te leveren
-"hoeveel luisteraars hebben er in 2024 gestemd",afwezig,,nvt,nee,stemcijfers staan niet in het corpus
-"wat vindt de samensteller zelf het mooiste nummer",afwezig,,nvt,nee,niet in de bron aanwezig
-"welk nummer stond het langst op nummer 1 in de Amerikaanse Billboard",afwezig,,nvt,nee,ander chartsysteem; niet in dit corpus
-"hoe vaak stond Bohemian Rhapsody op nummer 1",sql,,nvt,nee,telvraag; hoort naar SQL en niet naar RAG
-"welk nummer steeg het hardst tussen 2024 en 2025",sql,,nvt,nee,sorteervraag
-"hoeveel nummers uit 1975 staan in de lijst van 2025",sql,,nvt,nee,telvraag
-"welke artiest heeft de meeste nummers in de lijst",sql,,nvt,nee,groepeervraag
+vraag,categorie,verwacht_song_id,heeft_nl_tekst,heeft_corpus_tekst,gecontroleerd,toelichting
+"Bohemian Rhapsody van Queen",naam,1,ja,ja,nee,titel en artiest staan letterlijk in de vraag
+"Wat weet je over Starman van David Bowie?",naam,367,ja,ja,nee,
+"Hotel California",naam,3,ja,ja,nee,
+"Radar Love van Golden Earring",naam,9,ja,ja,nee,
+"Smells Like Teen Spirit",naam,39,ja,ja,nee,
+"Eleanor Rigby van The Beatles",naam,427,ja,ja,nee,
+"Perfect Day van Lou Reed",naam,234,ja,ja,nee,
+"De Bom van Doe Maar",naam,287,ja,ja,nee,
+"lied over een bokser die onterecht werd veroordeeld",omschrijving,398,ja,ja,nee,verwacht: Hurricane
+"nummer over eenzaamheid met een strijkkwartet in plaats van een band",omschrijving,427,ja,ja,nee,verwacht: Eleanor Rigby
+"Nederlandstalig nummer over de dreiging van een kernoorlog",omschrijving,287,ja,ja,nee,verwacht: De Bom
+"lied dat klinkt als een liefdesliedje maar eigenlijk over bezitsdrang en bespieden gaat",omschrijving,197,ja,ja,nee,verwacht: Every Breath You Take
+"nummer over een plek die je kunt verlaten maar die je nooit meer loslaat",omschrijving,3,ja,ja,nee,verwacht: Hotel California
+"grungenummer dat het levensgevoel van een hele generatie ging samenvatten",omschrijving,39,ja,ja,nee,verwacht: Smells Like Teen Spirit
+"lied over een wezen uit de ruimte dat contact zoekt met de jeugd",omschrijving,367,ja,ja,nee,verwacht: Starman
+"nummer waarin de dood van een popmuzikant het einde van een tijdperk markeert",omschrijving,450,ja,ja,nee,verwacht: American Pie
+"troostlied waarin de zanger belooft er te zijn als het iemand zwaar valt",omschrijving,100,ja,ja,nee,verwacht: Bridge Over Troubled Water
+"nummer over een lange nachtelijke autorit",omschrijving,9,ja,ja,nee,verwacht: Radar Love
+"protest tegen een schoolsysteem dat kinderen tot eenheidsworst kneedt",omschrijving,118,nee,nee,nee,verwacht: Another Brick in the Wall -- LET OP geen Nederlandse tekst in het corpus
+"Nederlandstalig lied waarin de zanger een staatshoofd toespreekt over oorlog",omschrijving,560,nee,nee,nee,verwacht: Welterusten meneer de president -- LET OP geen Nederlandse tekst
+"welk nummer werd in 2026 aan de lijst toegevoegd",afwezig,,nvt,nvt,nee,de lijst loopt tot 2025; hoort 'weet ik niet' op te leveren
+"hoeveel luisteraars hebben er in 2024 gestemd",afwezig,,nvt,nvt,nee,stemcijfers staan niet in het corpus
+"wat vindt de samensteller zelf het mooiste nummer",afwezig,,nvt,nvt,nee,niet in de bron aanwezig
+"welk nummer stond het langst op nummer 1 in de Amerikaanse Billboard",afwezig,,nvt,nvt,nee,ander chartsysteem; niet in dit corpus
+"hoe vaak stond Bohemian Rhapsody op nummer 1",sql,,nvt,nvt,nee,telvraag; hoort naar SQL en niet naar RAG
+"welk nummer steeg het hardst tussen 2024 en 2025",sql,,nvt,nvt,nee,sorteervraag
+"hoeveel nummers uit 1975 staan in de lijst van 2025",sql,,nvt,nvt,nee,telvraag
+"welke artiest heeft de meeste nummers in de lijst",sql,,nvt,nvt,nee,groepeervraag

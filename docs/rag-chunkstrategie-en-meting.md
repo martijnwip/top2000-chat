@@ -191,10 +191,10 @@ embedmodel `bge-m3` via Ollama, corpus `songs`, k=5, 20 vragen.
 | Variant | naam @5 | omschrijving @5 | opmerking |
 |---|---|---|---|
 | hybride, ongewogen (nul) | 100% | 8% | zie kanttekening hieronder |
-| geen fusie bij lege BM25 | 100% | 8% | geen effect: BM25 levert hier altijd ≥5 kandidaten |
+| geen fusie bij lege BM25 | 100% | 8% | geen effect: BM25 levert hier altijd ≥5 kandidaten. Inmiddels uit `VARIANTEN_METING1` verwijderd — kan nooit aanslaan, zie `eval.py` |
 | w_lexicaal = 0,75 | 100% | 8% | |
 | w_lexicaal = 0,50 | 100% | 17% | gekozen als standaard in de antwoordlaag |
-| w_lexicaal = 0,25 | 100% | 17% | zelfde score als 0,50, geen reden om verder te verlagen |
+| w_lexicaal = 0,25 | 100% | 17% | zelfde score als 0,50 én als kale vector-search, zie kanttekening hieronder |
 
 **Kanttekening bij de 8% versus de 10% uit §1.** §1 rapporteert de
 omschrijvingsscore over 10 vragen: de twee onvindbare (*Another Brick in the
@@ -203,7 +203,21 @@ noemer gehaald. `eval.py` doet dat niet automatisch — precies zoals het
 originele `eval_rag.py` dat ook niet deed — en telt over alle 12. Beide tellen
 dezelfde ene juiste treffer; alleen de noemer verschilt (1/10 = 10%,
 1/12 ≈ 8%). Geverifieerd door het originele `eval_rag.py` tegen dezelfde index
-te draaien: identieke uitkomst.
+te draaien: identieke uitkomst. Inmiddels heeft `data/rag_vragen.csv` een
+kolom `heeft_corpus_tekst` (`nee` voor die twee vragen); `eval.py` rapporteert
+sindsdien automatisch beide tellingen — over alle vragen en over alleen de
+meetbare — zodat dit verschil niet meer stilzwijgend hoeft te worden
+uitgerekend.
+
+**Aanvulling: w_lexicaal = 0,25 wint niets meer dan vector-only.** Per-vraag
+vergeleken (top-5-samenstelling van kale vector-search tegenover fuseer() met
+w_lexicaal=0,25, min_lex_kandidaten=5, op alle 20 vragen): in 7 van de 20
+verschilt de top-5 — BM25 schuift een kandidaat naar binnen of herschikt de
+volgorde — maar in geen van die zeven verandert dat of het verwachte nummer
+wél of niet in de top-5 staat. De 17%-score bij 0,25 is dus geen echte
+fusiewinst bovenop vector-only, alleen BM25's invloed teruggebracht tot ruis
+die het resultaat niet meer omzet. Dat verklaart ook waarom 0,25 en 0,50
+identiek scoren: onder 0,50 doet BM25 al vrijwel niets meer.
 
 **Conclusie meting 1.** w_lexicaal = 0,50 verdubbelt de omschrijvingsscore
 (8% → 17%) zonder dat naam-vragen zakken, en is per de eigen maatstaf uit §3b
