@@ -1,73 +1,144 @@
 #root {
-  padding: 32px 24px 64px;
+  padding: 0;
   text-align: left;
 }
 
-h1 {
+.chatkop {
+  flex: 0 0 auto;
+  padding: 20px 24px 14px;
   text-align: center;
-  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chatkop h1 {
+  font-size: 28px;
+  letter-spacing: -0.6px;
+  margin: 0 0 4px;
 }
 
 .ondertitel {
   text-align: center;
   color: var(--text);
-  margin-bottom: 32px;
+  font-size: 14px;
+}
+
+.gesprek {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px 24px 8px;
+}
+
+.leeg {
+  margin: auto;
+  color: var(--text);
+  text-align: center;
+}
+
+.bericht {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.bericht-gebruiker {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bericht-gebruiker p {
+  max-width: 75%;
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 18px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  color: var(--text-h);
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+.bericht-assistent {
+  text-align: left;
+}
+
+.denkt {
+  color: var(--text);
+  font-style: italic;
+}
+
+.invoergebied {
+  flex: 0 0 auto;
+  padding: 12px 24px 24px;
+  background: var(--bg);
 }
 
 .vraagform {
   display: flex;
+  align-items: flex-end;
   gap: 8px;
-  max-width: 640px;
+  max-width: 760px;
   margin: 0 auto;
+  padding: 10px 10px 10px 20px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
 }
 
-.vraagform input {
+.vraagform:focus-within {
+  border-color: var(--accent-border);
+}
+
+.vraagform textarea {
   flex: 1;
   font: inherit;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
+  padding: 8px 0;
+  line-height: 145%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
   color: var(--text-h);
+  max-height: 240px;
+  overflow-y: auto;
 }
 
-.vraagform input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.vraagform textarea::placeholder {
+  color: var(--text);
 }
 
 .vraagform button {
-  font: inherit;
-  padding: 10px 20px;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  border-radius: 6px;
+  border-radius: 50%;
   background: var(--accent);
   color: #fff;
   cursor: pointer;
 }
 
 .vraagform button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: default;
 }
 
 .fout {
-  max-width: 640px;
-  margin: 16px auto 0;
   padding: 10px 14px;
   border-radius: 6px;
   background: var(--accent-bg);
   color: var(--text-h);
 }
 
-.antwoord {
-  max-width: 640px;
-  margin: 24px auto 0;
-}
-
 .antwoordtekst {
   white-space: pre-wrap;
-  font-size: 19px;
+  font-size: 18px;
   line-height: 150%;
   color: var(--text-h);
 }

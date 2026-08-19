@@ -35,3 +35,6 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# PID's en logs van start.sh/stop.sh
+.run/

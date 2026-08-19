@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
 const PAD_LABEL = {
@@ -77,20 +77,63 @@ function Onderbouwing({ resultaat }) {
   )
 }
 
+function Bericht({ bericht }) {
+  if (bericht.rol === 'gebruiker') {
+    return (
+      <div className="bericht bericht-gebruiker">
+        <p>{bericht.tekst}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bericht bericht-assistent">
+      {bericht.bezig && <p className="denkt">bezig met nadenken&hellip;</p>}
+      {bericht.fout && <p className="fout">{bericht.fout}</p>}
+      {bericht.resultaat && (
+        <>
+          <p className="antwoordtekst">{bericht.resultaat.antwoord}</p>
+          <Verbruik resultaat={bericht.resultaat} />
+          <Onderbouwing resultaat={bericht.resultaat} />
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function App() {
   const [vraag, setVraag] = useState('')
+  const [berichten, setBerichten] = useState([])
   const [bezig, setBezig] = useState(false)
-  const [resultaat, setResultaat] = useState(null)
-  const [fout, setFout] = useState(null)
+  const textareaRef = useRef(null)
+  const eindeRef = useRef(null)
+
+  useEffect(() => {
+    eindeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [berichten])
+
+  function groeiTextarea() {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 240)}px`
+  }
 
   async function verstuur(e) {
     e.preventDefault()
     const tekst = vraag.trim()
     if (!tekst || bezig) return
 
+    const id = crypto.randomUUID()
+    setBerichten((b) => [
+      ...b,
+      { id: `${id}-vraag`, rol: 'gebruiker', tekst },
+      { id, rol: 'assistent', bezig: true },
+    ])
+    setVraag('')
     setBezig(true)
-    setFout(null)
-    setResultaat(null)
+    requestAnimationFrame(groeiTextarea)
+
     try {
       const respons = await fetch('/api/ask', {
         method: 'POST',
@@ -101,45 +144,85 @@ export default function App() {
         const body = await respons.json().catch(() => ({}))
         throw new Error(body.detail || `${respons.status} ${respons.statusText}`)
       }
-      setResultaat(await respons.json())
+      const resultaat = await respons.json()
+      setBerichten((b) =>
+        b.map((m) => (m.id === id ? { ...m, bezig: false, resultaat } : m)),
+      )
     } catch (err) {
-      setFout(err.message)
+      setBerichten((b) =>
+        b.map((m) => (m.id === id ? { ...m, bezig: false, fout: err.message } : m)),
+      )
     } finally {
       setBezig(false)
     }
   }
 
+  function toetsAf(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      verstuur(e)
+    }
+  }
+
   return (
     <main id="root">
-      <h1>Top 2000 Chat</h1>
-      <p className="ondertitel">
-        Vragen over de NPO Radio 2 Top 2000, 1999&ndash;2025. Draait volledig
-        lokaal.
-      </p>
+      <header className="chatkop">
+        <h1>Top 2000 Chat</h1>
+        <p className="ondertitel">
+          Vragen over de NPO Radio 2 Top 2000, 1999&ndash;2025. Draait volledig
+          lokaal.
+        </p>
+      </header>
 
-      <form onSubmit={verstuur} className="vraagform">
-        <input
-          type="text"
-          value={vraag}
-          onChange={(e) => setVraag(e.target.value)}
-          placeholder="Wat stond er op 1 in 2025?"
-          disabled={bezig}
-          autoFocus
-        />
-        <button type="submit" disabled={bezig || !vraag.trim()}>
-          {bezig ? 'Bezig…' : 'Vraag'}
-        </button>
-      </form>
+      <div className="gesprek">
+        {berichten.length === 0 && (
+          <p className="leeg">
+            Stel een vraag, bijvoorbeeld &ldquo;Wat stond er op 1 in
+            2025?&rdquo;
+          </p>
+        )}
+        {berichten.map((b) => (
+          <Bericht key={b.id} bericht={b} />
+        ))}
+        <div ref={eindeRef} />
+      </div>
 
-      {fout && <p className="fout">{fout}</p>}
-
-      {resultaat && (
-        <section className="antwoord">
-          <p className="antwoordtekst">{resultaat.antwoord}</p>
-          <Verbruik resultaat={resultaat} />
-          <Onderbouwing resultaat={resultaat} />
-        </section>
-      )}
+      <div className="invoergebied">
+        <form onSubmit={verstuur} className="vraagform">
+          <textarea
+            ref={textareaRef}
+            value={vraag}
+            onChange={(e) => {
+              setVraag(e.target.value)
+              groeiTextarea()
+            }}
+            onKeyDown={toetsAf}
+            placeholder="Stel een vraag over de Top 2000…"
+            disabled={bezig}
+            rows={1}
+            autoFocus
+          />
+          <button
+            type="submit"
+            disabled={bezig || !vraag.trim()}
+            aria-label="Verstuur"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 19V5" />
+              <path d="M5 12l7-7 7 7" />
+            </svg>
+          </button>
+        </form>
+      </div>
     </main>
   )
 }
