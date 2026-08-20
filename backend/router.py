@@ -109,6 +109,13 @@ OMSCHRIJVING = [
     ("betekenis",
      r"\b(betekenis|betekent|achtergrond|verhaal achter|ge[iï]nspireerd|"
      r"inspiratie|thema|boodschap|symbol\w*)\b"),
+    # "zijn een protest tegen X" beschrijft net als 'gaat over' een onderwerp,
+    # maar zonder een van de onderwerp/betekenis-woorden hierboven. Toegevoegd
+    # na een misser op "Welke nummers zijn een protest tegen de oorlog in
+    # Vietnam?" -- viel terug op sql, want geen enkel ander signaal sloeg aan.
+    ("duiding",
+     r"\b(protest\w*|verzet tegen|kritiek op|eerbetoon aan|ode aan|"
+     r"hommage aan)\b"),
     ("ontstaan",
      r"\b(waarom schreef|waarom maakte|geschreven over|geschreven naar "
      r"aanleiding|ontstaan van|hoe kwam .{0,20}\btot stand)\b"),

@@ -209,32 +209,106 @@ sindsdien automatisch beide tellingen — over alle vragen en over alleen de
 meetbare — zodat dit verschil niet meer stilzwijgend hoeft te worden
 uitgerekend.
 
-**Aanvulling: w_lexicaal = 0,25 wint niets meer dan vector-only.** Per-vraag
-vergeleken (top-5-samenstelling van kale vector-search tegenover fuseer() met
-w_lexicaal=0,25, min_lex_kandidaten=5, op alle 20 vragen): in 7 van de 20
-verschilt de top-5 — BM25 schuift een kandidaat naar binnen of herschikt de
-volgorde — maar in geen van die zeven verandert dat of het verwachte nummer
-wél of niet in de top-5 staat. De 17%-score bij 0,25 is dus geen echte
-fusiewinst bovenop vector-only, alleen BM25's invloed teruggebracht tot ruis
-die het resultaat niet meer omzet. Dat verklaart ook waarom 0,25 en 0,50
-identiek scoren: onder 0,50 doet BM25 al vrijwel niets meer.
+**Aanvulling (op de 20-vragenset): w_lexicaal = 0,25 wint niets meer dan
+vector-only.** Per-vraag vergeleken (top-5-samenstelling van kale
+vector-search tegenover fuseer() met w_lexicaal=0,25, min_lex_kandidaten=5,
+op alle 20 vragen): in 7 van de 20 verschilt de top-5 — BM25 schuift een
+kandidaat naar binnen of herschikt de volgorde — maar in geen van die zeven
+verandert dat of het verwachte nummer wél of niet in de top-5 staat. Op deze
+kleine set was 0,25 dus effectief gelijk aan vector-only. **Dit hield geen
+stand op de grotere set — zie hieronder.**
 
-**Conclusie meting 1.** w_lexicaal = 0,50 verdubbelt de omschrijvingsscore
-(8% → 17%) zonder dat naam-vragen zakken, en is per de eigen maatstaf uit §3b
-("een gewicht dat omschrijvingen redt maar naam-vragen sloopt, is geen
-verbetering") een reële verbetering — maar ver onder de 60%-ondergrens uit
-§5. Dat is ook de verwachting: het echte werk zit in meting 2.
+**Conclusie meting 1 (20-vragenset, achterhaald).** w_lexicaal = 0,50
+verdubbelt de omschrijvingsscore (8% → 17%) zonder dat naam-vragen zakken, en
+leek daarmee per de maatstaf uit §3b een reële verbetering. Dit was de
+aanleiding om `W_LEXICAAL = 0,50` als standaard in `antwoord.py` te zetten.
+De herhaling hieronder, op bijna drie keer zoveel omschrijvingsvragen, laat
+een ander beeld zien.
 
-**Meting 2 — zinsvensters, beste fusie uit meting 1.**
+**Meting 1, herhaald op de grotere set (58 vragen, 13 augustus → nu).**
+Na het samenvoegen van `data/rag_vragen_werklijst.csv` (spec §6 / stap 3 uit
+`rag-waar-gebleven.md`) staan er 50 omschrijvingsvragen in plaats van 12.
+Gemeten met `backend/rag/eval.py --meting1`, embedmodel `bge-m3` via Ollama,
+corpus `songs`, k=5, 58 vragen (8 naam + 50 omschrijving).
 
-| Modus | naam @5 | omschrijving @5 | gem. rang |
-|---|---|---|---|
-| lexicaal | | | |
-| vector | | | |
-| hybride | | | |
+| Variant | naam @5 | omschrijving @5 |
+|---|---|---|
+| vector-only (`--modus vector`, ter referentie) | 100% | 32% |
+| hybride, ongewogen (nul) | 100% | 20% |
+| w_lexicaal = 0,75 | 100% | 20% |
+| w_lexicaal = 0,50 (huidige standaard in `antwoord.py`) | 100% | 24% |
+| w_lexicaal = 0,25 | 100% | 28% |
 
-Noteer erbij: aantal chunks, embedtijd totaal, zoektijd per vraag, en de
-bestandsgrootte van de index.
+**Dit keert de conclusie om.** Op de kleine set leek fusie neutraal tot licht
+positief; op de grotere set is elke geteste fusieweging slechter dan kale
+vector-search, en de terugval is monotoon met het gewicht: hoe meer BM25-
+invloed, hoe lager de omschrijvingsscore. Per-vraag nagerekend op de 48
+meetbare omschrijvingsvragen (`heeft_corpus_tekst = ja`): bij w_lexicaal=0,25
+verliest hybride het verwachte nummer uit de top-5 bij 2 vragen waar
+vector-only het wél vond, en wint bij geen enkele — een netto verlies, niet
+ruis die toevallig de andere kant op viel zoals bij de kleine set.
+
+**Openstaand: de standaard in `antwoord.py` (`W_LEXICAAL = 0,50`) is nu niet
+meer onderbouwd door de meting die hem koos.** Vector-only scoort op deze
+grotere set het best gemeten. Vóór dit wijzigen: nagaan of dit patroon
+standhoudt na het herchunken (meting 2) — de huidige chunks van 2.000-2.500
+tekens zijn de reden dat BM25 op exacte woorden hier weinig toevoegt, dat kan
+met kleinere, preciezere chunks anders liggen.
+
+**Voorbereiding gedaan (19 augustus): `backend/rag/herchunk.py` en de
+benchmark.** De knipstap zelf staat en is getest — zie `rag-waar-gebleven.md`
+voor de bug-geschiedenis. Op het songs-corpus: 21.193 sectie-chunks ->
+45.504 zinsvensters, gemiddeld 497 tekens, nul boven de harde 800-grens.
+
+Benchmark van de embedstap (§2 "Kosten van de herbouw"): 1.000 vensters uit
+een aparte, wegwerpbare testdatabase (niet `data/rag_index.db`) embedden met
+`bge-m3` via Ollama kostte **160s** (`caffeinate -i`, dus de Mac bleef wakker
+tijdens het draaien). Dat is ~6,3 vensters/s. Geëxtrapoleerd naar alle 45.504
+vensters: **circa 2 uur** (45.504 / 1000 × 160s ≈ 7.280s ≈ 121 min).
+
+**De volledige herbouw is gedraaid (19 augustus, 17:48).** Tegen een aparte
+database (`data/rag_index_zinsvenster.db`, 310 MB — nog steeds niet
+`data/rag_index.db`, de site draaide gewoon door op de oude index). 50.429
+chunks (45.504 vensters + 4.925 ongewijzigde feitenblokken, in een verse
+database dus allebei opnieuw te embedden), 7.594s (~2u 6min), met
+`caffeinate -i`. Versie geregistreerd als `zinsvenster-500-25`.
+
+**Meting 2 — zinsvensters, gemeten met dezelfde 58 vragen als meting 1.**
+
+| Modus | naam @5 | omschr. top-1 | top-3 | top-5 | gem. rang |
+|---|---|---|---|---|---|
+| lexicaal | 100% | 2% | 6% | 10% | 2.8 |
+| vector | 100% | 18% | 26% | 32% | 1.9 |
+| hybride (1,0/1,0) | 100% | 8% | 14% | 20% | 2.5 |
+
+Fusievarianten (`--meting1`, zelfde opzet als §5 meting 1):
+
+| Variant | naam @5 | omschrijving @5 |
+|---|---|---|
+| hybride, ongewogen (nul) | 100% | 20% |
+| w_lexicaal = 0,75 | 100% | 24% |
+| w_lexicaal = 0,50 | 100% | 24% |
+| w_lexicaal = 0,25 | 100% | 24% |
+
+**Conclusie meting 2 — het herchunken loste het probleem niet op.**
+Vector-only haalt op de nieuwe index exact hetzelfde recall@5 als op de oude:
+**32% blijft 32%**. Top-1 ging iets omhoog (14% → 18%) en de gemiddelde rang
+verbeterde licht (2,1 → 1,9), maar het getal waar dit hele traject om
+begonnen is — hoeveel vaker het juiste nummer in de top-5 staat — is
+onveranderd. Bij de fusievarianten schoof iets: 0,75 werd beter (20% → 24%),
+0,25 werd slechter (28% → 24%), maar geen enkele fusieweging haalt hier of
+op de oude index vector-only in.
+
+Dit weerlegt de werkhypothese uit §1 niet per se (de juiste zin ligt
+aantoonbaar dichter bij zijn eigen betekenis nu, zie de kortere gem. rang),
+maar het bevestigt ook niet dat kleinere chunks de kernbeperking waren.
+`bge-m3` blijkt de rake zin kennelijk al goed genoeg op te pikken uit een
+chunk van 2.000 tekens — het knippen zelf was dus niet de bottleneck. Waar
+die wel zit, is nog niet gemeten; kandidaten: het model zelf (bge-m3 is een
+kleine, algemene embedder), de vraagformulering versus de artikelformulering
+("een lied over een bokser die onterecht is veroordeeld" tegenover een
+Wikipedia-lopende tekst), of gewoon dat 12-50 vragen nog te weinig is om
+verder dan ruis te onderscheiden.
 
 **Meting 3 — drempel opnieuw ijken.** `antwoord_rag.py` weigert te antwoorden
 onder een cosine van 0,50. Kleinere chunks verschuiven de cosine-verdeling, dus

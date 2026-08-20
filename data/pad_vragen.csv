@@ -13,6 +13,7 @@ vraag,verwacht_pad,gecontroleerd,toelichting
 "Welke nummers van David Bowie kent de lijst?",sql,nee,"geen enkel signaal -- test van de terugval"
 "Staat Nirvana in de lijst?",sql,nee,"geen enkel signaal -- test van de terugval"
 "Welke nummers gaan over de vietnamoorlog?",rag_songs,nee,"SQL heeft geen kolom voor onderwerp"
+"Welke nummers zijn een protest tegen de oorlog in Vietnam?",rag_songs,nee,"'protest tegen', geen 'over'/'betekenis' -- eigen signaal nodig"
 "Waar gaat Hotel California over?",rag_songs,nee,
 "Wat is de betekenis van Bohemian Rhapsody?",rag_songs,nee,
 "Welk nummer uit 1975 gaat over oorlog?",rag_songs,nee,"jaartal en omschrijving samen -- omschrijving hoort te winnen"

@@ -18,17 +18,21 @@ Daarom eerst een harde drempel, buiten het model om: is de beste cosine te
 laag, dan wordt er niets gegenereerd. Op de COSINE, niet op de eindscore —
 zoek.fuseer() legt uit waarom die laatste alleen een volgorde is.
 
-DE FUSIE-INSTELLING IS NU GEMETEN, DE DREMPEL NOG NIET
+DE FUSIE-INSTELLING STAAT OPNIEUW OPEN, DE DREMPEL OOK NOG
 ---------------------------------------------------------
-Meting 1 (rag-chunkstrategie-en-meting.md §5) liet zien dat w_lexicaal = 0,50
-de omschrijvingsscore optilt van 8% naar 17% @5 zonder dat naam-vragen zakken
-(100% blijft 100%). Dat gewicht is daarom hier de standaardinstelling voor
-'hybride', niet meer de ongewogen 1,0/1,0 uit de oorspronkelijke
-rank_fusion(). DREMPEL hieronder is dat niet: die is nog met de hand gekozen
-en nergens aan getoetst. Om hem te onderbouwen (meting 3, §5, moet ná het
-herchunken van stap 9): draai vragen waarvan je weet dat het antwoord in het
-corpus staat en vragen waarvan je weet van niet, en kijk waar de cosines
-uiteenvallen:
+Meting 1 (rag-chunkstrategie-en-meting.md §5) liet op 12 omschrijvingsvragen
+zien dat w_lexicaal = 0,50 de score optilt van 8% naar 17% @5 zonder dat
+naam-vragen zakken. Dat gewicht staat daarom hieronder als standaard voor
+'hybride'. LET OP: de herhaling van meting 1 op 50 omschrijvingsvragen
+(rag-waar-gebleven.md, 19 augustus) draait dit om — daar wint kale
+vector-search (32%) van elke geteste fusieweging, óók van 0,50 (24%). De
+W_LEXICAAL hieronder is dus voorlopig niet meer onderbouwd door de meting die
+hem koos; zie rag-waar-gebleven.md voor de open beslissing (nu aanpassen, of
+wachten tot na het herchunken van meting 2). DREMPEL hieronder staat los van
+dit alles: die is nog met de hand gekozen en nergens aan getoetst. Om hem te
+onderbouwen (meting 3, §5, moet ná het herchunken van stap 9): draai vragen
+waarvan je weet dat het antwoord in het corpus staat en vragen waarvan je
+weet van niet, en kijk waar de cosines uiteenvallen:
 
     python -m backend.rag.zoek songs "waar gaat Hotel California over" -k 5
     python -m backend.rag.zoek songs "moet ik me registreren" -k 5

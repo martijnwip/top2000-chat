@@ -11,8 +11,13 @@ top2000.db
 data/corpus_songs.jsonl
 data/corpus_artiesten.jsonl
 
-# 277 MB; chunks en bge-m3-vectoren
+# 277 MB; chunks en bge-m3-vectoren. Ook experimentele varianten (bv. de
+# zinsvenster-herbouw) horen hier nooit in git.
 data/rag_index.db
+data/rag_index*.db
+
+# Logs van lange draaien zoals de herchunk-herbouw (rag-chunkstrategie-en-meting.md §7)
+logs/
 
 # Caches van externe API's, samen 314 MB. Buiten git houden, maar niet
 # weggooien: opnieuw ophalen kost duizenden verzoeken aan MusicBrainz en
